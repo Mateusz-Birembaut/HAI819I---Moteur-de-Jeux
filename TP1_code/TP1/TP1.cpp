@@ -36,6 +36,7 @@ const unsigned int SCR_HEIGHT = 600;
 glm::vec3 camera_position   = glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up    = glm::vec3(0.0f, 1.0f,  0.0f);
+float rotation_angle = 0.0f;
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -53,57 +54,7 @@ struct Vertex{
     glm::vec2 uv;
 };
 
-/* void setTesselatedSquare ( std::vector<unsigned short> & indices, 
-    std::vector<std::vector<unsigned short> > & triangles,
-    std::vector<glm::vec3> & indexed_vertices)  {
-    indices.clear();
-    triangles.clear();
-    indexed_vertices.clear();
 
-    int nX = 16;
-    int nY = 16;
-
-    for (int i = 0; i < nX; i++) {
-        for (int j = 0; j < nY; j++) { 
-            float t_x, t_z, x, y, z;
-
-            t_x = (float(i) / float(nX - 1))*2;
-            t_z = (float(j) / float(nY - 1))*2;
-            
-            x = t_x -1;
-            z = t_z -1;
-
-            y =  static_cast<float>(std::rand()) / RAND_MAX * 0.06f - 0.03f;
-            
-            glm::vec3 position = glm::vec3(x, y, z);
-
-            indexed_vertices.push_back(position);
-        }
-    }
-    for (int i = 0; i < nX; i ++) {
-        for (int j = 0; j < nY; j++) {
-            if(i != nX-1 && j != nY-1){
-                short unsigned int de_base = i*nX + j;
-                short unsigned int voisin_droite = i*nX + j+1;
-                short unsigned int voisin_haut = (i+1)*nX + j;
-                short unsigned int voisin_haut_droite = (i+1)*nX + j+1;
-
-
-                indices.push_back(de_base);
-                indices.push_back(voisin_haut);
-                indices.push_back(voisin_droite);
-                triangles.push_back({de_base, voisin_haut, voisin_droite});
-
-
-                indices.push_back(voisin_haut_droite);
-                indices.push_back(voisin_droite);
-                indices.push_back(voisin_haut);
-                triangles.push_back({voisin_haut_droite, voisin_droite, voisin_haut});
-
-            }
-        }
-    }
-} */
 
 void setTesselatedSquare ( std::vector<unsigned short> & indices, 
     std::vector<std::vector<unsigned short> > & triangles,
@@ -133,8 +84,8 @@ void setTesselatedSquare ( std::vector<unsigned short> & indices,
             v.position = position;
             v.color = position;
             v.normal = glm::vec3(0.0, 1.0, 0.0);
-            //v.uv = glm::vec2(i/(nX-1) , j/(nY-1));
-            v.uv = glm::vec2(0.0,0.0);
+            v.uv = glm::vec2(float(i)/(float(nX-1)), float(j)/(float(nY-1)));
+            //v.uv = glm::vec2(0.0,0.0);
 
             indexed_vertices.push_back(v);
         }
@@ -163,6 +114,14 @@ void setTesselatedSquare ( std::vector<unsigned short> & indices,
         }
     }
 }
+void checkGLError(const char* operation) {
+    GLenum error;
+    while ((error = glGetError()) != GL_NO_ERROR) {
+        std::cout << "OpenGL error after " << operation << ": " << error << std::endl;
+    }
+}
+
+
 
 int main( void )
 {
@@ -256,25 +215,47 @@ int main( void )
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load and generate the texture
-    /* 
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("sol.jpg", &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_set_flip_vertically_on_load(true); // Pour que l'image ne soit pas inversée
+    unsigned char *data = stbi_load("ground.jpg", &width, &height, &nrChannels, 0);
+    
+    if (data) {
+        std::cout << "Texture loaded successfully:" << std::endl;
+        std::cout << "Width: " << width << std::endl;
+        std::cout << "Height: " << height << std::endl;
+        std::cout << "Channels: " << nrChannels << std::endl;
+        
+        // Vérifiez si les dimensions sont des puissances de 2
+        bool isPowerOf2 = (width & (width - 1)) == 0 && (height & (height - 1)) == 0;
+        if (!isPowerOf2) {
+            std::cout << "Warning: Texture dimensions are not power of 2" << std::endl;
+        }
     }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
+    
+    // Détermine le format en fonction du nombre de canaux
+    GLenum format;
+    if (nrChannels == 1)
+        format = GL_RED;
+    else if (nrChannels == 3)
+        format = GL_RGB;
+    else if (nrChannels == 4)
+        format = GL_RGBA;
+    else {
+        std::cout << "Unsupported number of channels: " << nrChannels << std::endl;
+        stbi_image_free(data);
+        return -1;
     }
-    stbi_image_free(data);
-    */
+        // Appelez cette fonction après les opérations importantes
+    checkGLError("texture creation");
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    
 
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(glm::vec3) * 4, &indexed_vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(Vertex), &indexed_vertices[0], GL_STATIC_DRAW);
 
     // Generate a buffer for the indices as well
     GLuint elementbuffer;
@@ -382,7 +363,7 @@ int main( void )
         glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
         glVertexAttribPointer(
                     3,                  // attribute
-                    3,                  // size
+                    2,                  // size
                     GL_FLOAT,           // type
                     GL_FALSE,           // normalized?
                     sizeof(Vertex),                  // stride
@@ -457,7 +438,24 @@ void processInput(GLFWwindow *window)
         camera_position -= cameraSpeed * camera_right;
     }
 
-    //TODO add translations
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        rotation_angle += cameraSpeed;
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotation_angle, camera_up);
+        camera_target = glm::vec3(rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+        rotation_angle -= cameraSpeed;
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotation_angle, camera_up);
+        camera_target = glm::vec3(rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+        camera_target += cameraSpeed * camera_up; // pas ouf mais ok pour test texture
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        camera_target -= cameraSpeed * camera_up; // pas ouf mais ok pour test texture
+    }
+
 
 }
 
