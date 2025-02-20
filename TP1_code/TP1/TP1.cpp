@@ -25,6 +25,8 @@ using namespace glm;
 #include <common/shader.hpp>
 #include <common/objloader.hpp>
 #include <common/vboindexer.hpp>
+#include <common/terrain.hpp>
+#include <common/texture.hpp>
 
 void processInput(GLFWwindow *window);
 
@@ -33,7 +35,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-glm::vec3 camera_position   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 camera_position   = glm::vec3(0.0f, 1.0f,  2.0f);
 glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up    = glm::vec3(0.0f, 1.0f,  0.0f);
 float rotation_angle = 0.0f;
@@ -47,73 +49,6 @@ float angle = 0.;
 float zoom = 1.;
 /*******************************************************************************/
 
-struct Vertex{
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::vec3 normal;
-    glm::vec2 uv;
-};
-
-
-
-void setTesselatedSquare ( std::vector<unsigned short> & indices, 
-    std::vector<std::vector<unsigned short> > & triangles,
-    std::vector<Vertex> & indexed_vertices)  {
-    indices.clear();
-    triangles.clear();
-    indexed_vertices.clear();
-
-    int nX = 16;
-    int nY = 16;
-
-    for (int i = 0; i < nX; i++) {
-        for (int j = 0; j < nY; j++) { 
-            float t_x, t_z, x, y, z;
-
-            t_x = (float(i) / float(nX - 1))*2;
-            t_z = (float(j) / float(nY - 1))*2;
-            
-            x = t_x -1;
-            z = t_z -1;
-
-            y =  static_cast<float>(std::rand()) / RAND_MAX * 0.06f - 0.03f;
-            
-            glm::vec3 position = glm::vec3(x, y, z);
-
-            Vertex v;
-            v.position = position;
-            v.color = position;
-            v.normal = glm::vec3(0.0, 1.0, 0.0);
-            v.uv = glm::vec2(float(i)/(float(nX-1)), float(j)/(float(nY-1)));
-            //v.uv = glm::vec2(0.0,0.0);
-
-            indexed_vertices.push_back(v);
-        }
-    }
-    for (int i = 0; i < nX; i ++) {
-        for (int j = 0; j < nY; j++) {
-            if(i != nX-1 && j != nY-1){
-                short unsigned int de_base = i*nX + j;
-                short unsigned int voisin_droite = i*nX + j+1;
-                short unsigned int voisin_haut = (i+1)*nX + j;
-                short unsigned int voisin_haut_droite = (i+1)*nX + j+1;
-
-
-                indices.push_back(de_base);
-                indices.push_back(voisin_haut);
-                indices.push_back(voisin_droite);
-                triangles.push_back({de_base, voisin_haut, voisin_droite});
-
-
-                indices.push_back(voisin_haut_droite);
-                indices.push_back(voisin_droite);
-                indices.push_back(voisin_haut);
-                triangles.push_back({voisin_haut_droite, voisin_droite, voisin_haut});
-
-            }
-        }
-    }
-}
 void checkGLError(const char* operation) {
     GLenum error;
     while ((error = glGetError()) != GL_NO_ERROR) {
@@ -203,54 +138,74 @@ int main( void )
 
     setTesselatedSquare(indices, triangles, indexed_vertices);
 
-    // Load it into a VBO
+    //chargementTexture
+    Texture_data heightMap = {};
+    heightMap.path = "heightmap-1024x1024.png";
+    heightMap.flipVertically = true;
+    loadTexture(heightMap);
 
+
+    Texture_data grassTexture = {};
+    grassTexture.path = "grass.png";
+    grassTexture.flipVertically = true;
+    loadTexture(grassTexture);
+
+    Texture_data rockTexture = {};
+    rockTexture.path = "rock.png";
+    rockTexture.flipVertically = true;
+    loadTexture(rockTexture);
+
+    // Load it into a VBO
 
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    // set the texture wrapping/filtering options (on the currently bound texture object)
+
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load and generate the texture
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // Pour que l'image ne soit pas inversée
-    unsigned char *data = stbi_load("ground.jpg", &width, &height, &nrChannels, 0);
+    checkGLError("texture configuration");
     
-    if (data) {
-        std::cout << "Texture loaded successfully:" << std::endl;
-        std::cout << "Width: " << width << std::endl;
-        std::cout << "Height: " << height << std::endl;
-        std::cout << "Channels: " << nrChannels << std::endl;
-        
-        // Vérifiez si les dimensions sont des puissances de 2
-        bool isPowerOf2 = (width & (width - 1)) == 0 && (height & (height - 1)) == 0;
-        if (!isPowerOf2) {
-            std::cout << "Warning: Texture dimensions are not power of 2" << std::endl;
-        }
-    }
-    
-    // Détermine le format en fonction du nombre de canaux
-    GLenum format;
-    if (nrChannels == 1)
-        format = GL_RED;
-    else if (nrChannels == 3)
-        format = GL_RGB;
-    else if (nrChannels == 4)
-        format = GL_RGBA;
-    else {
-        std::cout << "Unsupported number of channels: " << nrChannels << std::endl;
-        stbi_image_free(data);
-        return -1;
-    }
-        // Appelez cette fonction après les opérations importantes
-    checkGLError("texture creation");
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, heightMap.format, heightMap.width, heightMap.height, 0, heightMap.format, GL_UNSIGNED_BYTE, heightMap.data);
     glGenerateMipmap(GL_TEXTURE_2D);
+    checkGLError("texture image loading");
+
+    GLuint texture2;
+    glGenTextures(1, &texture2);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    checkGLError("texture configuration");
     
+
+    glTexImage2D(GL_TEXTURE_2D, 0, grassTexture.format, grassTexture.width, grassTexture.height, 0, grassTexture.format, GL_UNSIGNED_BYTE, grassTexture.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    checkGLError("texture image loading");
+
+    GLuint texture3;
+    glGenTextures(1, &texture3);
+    glBindTexture(GL_TEXTURE_2D, texture3);
+
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    checkGLError("texture configuration");
+    
+
+    glTexImage2D(GL_TEXTURE_2D, 0, rockTexture.format, rockTexture.width, rockTexture.height, 0, rockTexture.format, GL_UNSIGNED_BYTE, rockTexture.data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    checkGLError("texture image loading");
+
+
 
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
@@ -380,10 +335,20 @@ int main( void )
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        // Obtenir l'emplacement de l'uniform `u_texture`
-        GLuint textureID = glGetUniformLocation(programID, "u_texture");
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
 
-        glUniform1i(textureID, 0);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, texture3);
+
+        // Obtenir l'emplacement de l'uniform `u_texture`
+        GLuint textureID1 = glGetUniformLocation(programID, "u_heightMap");
+        GLuint textureID2 = glGetUniformLocation(programID, "u_grassTexture");
+        GLuint textureID3 = glGetUniformLocation(programID, "u_rockTexture");
+
+        glUniform1i(textureID1, 0); 
+        glUniform1i(textureID2, 1); 
+        glUniform1i(textureID3, 2); 
 
         // Draw the triangles !
         glDrawElements(
