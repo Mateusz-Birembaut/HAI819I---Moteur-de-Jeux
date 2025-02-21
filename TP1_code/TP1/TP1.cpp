@@ -136,75 +136,35 @@ int main( void )
     std::string filename("chair.off");
     //loadOFF(filename, indexed_vertices, indices, triangles );
 
-    setTesselatedSquare(indices, triangles, indexed_vertices);
+    //generate a terrain
+    Terrain terrain(64, 64, 10.0f, 10.0f);
+    terrain.create(indices, triangles, indexed_vertices);
 
-    //chargementTexture
-    Texture_data heightMap = {};
-    heightMap.path = "heightmap-1024x1024.png";
-    heightMap.flipVertically = true;
-    loadTexture(heightMap);
+    // Create and load the textures
+    Texture heightMap("heightmap-1024x1024.png", true, false);
+    heightMap.load();
+    heightMap.createTexture();
+    heightMap.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-
-    Texture_data grassTexture = {};
-    grassTexture.path = "grass.png";
-    grassTexture.flipVertically = true;
-    loadTexture(grassTexture);
-
-    Texture_data rockTexture = {};
-    rockTexture.path = "rock.png";
-    rockTexture.flipVertically = true;
-    loadTexture(rockTexture);
-
-    // Load it into a VBO
-
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    checkGLError("texture configuration");
+    heightMap.updateGLTexture();
     
-
-    glTexImage2D(GL_TEXTURE_2D, 0, heightMap.format, heightMap.width, heightMap.height, 0, heightMap.format, GL_UNSIGNED_BYTE, heightMap.data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    checkGLError("texture image loading");
-
-    GLuint texture2;
-    glGenTextures(1, &texture2);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    checkGLError("texture configuration");
+    Texture grassTexture("grass.png", true,false);
+    grassTexture.load();
+    grassTexture.createTexture();
+    grassTexture.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+    grassTexture.updateGLTexture();
     
+    Texture rockTexture("rock.png", true,false);
+    rockTexture.load();
+    rockTexture.createTexture();
+    rockTexture.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+    rockTexture.updateGLTexture();
 
-    glTexImage2D(GL_TEXTURE_2D, 0, grassTexture.format, grassTexture.width, grassTexture.height, 0, grassTexture.format, GL_UNSIGNED_BYTE, grassTexture.data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    checkGLError("texture image loading");
-
-    GLuint texture3;
-    glGenTextures(1, &texture3);
-    glBindTexture(GL_TEXTURE_2D, texture3);
-
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    checkGLError("texture configuration");
-    
-
-    glTexImage2D(GL_TEXTURE_2D, 0, rockTexture.format, rockTexture.width, rockTexture.height, 0, rockTexture.format, GL_UNSIGNED_BYTE, rockTexture.data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    checkGLError("texture image loading");
-
+    Texture snowrockTexture("snowrocks.png", true,false);
+    snowrockTexture.load();
+    snowrockTexture.createTexture();
+    snowrockTexture.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+    snowrockTexture.updateGLTexture();
 
 
     GLuint vertexbuffer;
@@ -221,8 +181,6 @@ int main( void )
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
     GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
-
-
 
     // For speed computation
     double lastTime = glfwGetTime();
@@ -333,22 +291,27 @@ int main( void )
 
         // activer texture
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, heightMap.getID());
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
+        glBindTexture(GL_TEXTURE_2D, grassTexture.getID());
 
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, texture3);
+        glBindTexture(GL_TEXTURE_2D, rockTexture.getID());
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, snowrockTexture.getID());
 
         // Obtenir l'emplacement de l'uniform `u_texture`
         GLuint textureID1 = glGetUniformLocation(programID, "u_heightMap");
         GLuint textureID2 = glGetUniformLocation(programID, "u_grassTexture");
         GLuint textureID3 = glGetUniformLocation(programID, "u_rockTexture");
+        GLuint textureID4 = glGetUniformLocation(programID, "u_snowrockTexture");
 
         glUniform1i(textureID1, 0); 
         glUniform1i(textureID2, 1); 
         glUniform1i(textureID3, 2); 
+        glUniform1i(textureID4, 3); 
 
         // Draw the triangles !
         glDrawElements(
