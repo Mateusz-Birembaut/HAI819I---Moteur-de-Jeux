@@ -67,6 +67,52 @@ public:
             }
         }
     }
+
+    void generate(GLuint vertexbuffer, GLuint elementbuffer, std::vector<unsigned short> & indices, 
+                  std::vector<std::vector<unsigned short> > & triangles, std::vector<Vertex> & indexed_vertices){
+
+        create(indices, triangles, indexed_vertices);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+        glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(Vertex), &indexed_vertices[0], GL_STATIC_DRAW);
+    
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+    }
+
+    void handleInputs(GLFWwindow *window, GLuint vertexbuffer, GLuint elementbuffer, std::vector<unsigned short> & indices, 
+                     std::vector<std::vector<unsigned short> > & triangles, std::vector<Vertex> & indexed_vertices) {
+        static bool zPressed = false;
+        static bool xPressed = false;
+
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, true);
+
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS && VertexCountY < 256) {
+            if (!zPressed) {
+                VertexCountX++;
+                VertexCountY++;
+                std::cout << VertexCountX << " " << VertexCountY << std::endl;
+                generate(vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
+                zPressed = true;
+            }
+        } else {
+            zPressed = false;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS && VertexCountY > 2) {
+            if (!xPressed) {
+                VertexCountX--;
+                VertexCountY--;
+                std::cout << VertexCountX << " " << VertexCountY << std::endl;
+                generate(vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
+                xPressed = true;
+            }
+        } else {
+            xPressed = false;
+        }
+    }
+
 };
 
 #endif

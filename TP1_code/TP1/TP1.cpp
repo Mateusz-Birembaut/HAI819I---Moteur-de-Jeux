@@ -27,18 +27,18 @@ using namespace glm;
 #include <common/vboindexer.hpp>
 #include <common/terrain.hpp>
 #include <common/texture.hpp>
+#include <common/camera.hpp>
 
-void processInput(GLFWwindow *window);
+//params
+int nX = 64;
+int nY = 64;
 
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 // camera
-glm::vec3 camera_position   = glm::vec3(0.0f, 1.0f,  2.0f);
-glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 camera_up    = glm::vec3(0.0f, 1.0f,  0.0f);
-float rotation_angle = 0.0f;
+Camera camera(glm::vec3(0.0f, 1.0f,  2.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f,  0.0f), 0.0f, 2.5f);
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -47,6 +47,17 @@ float lastFrame = 0.0f;
 //rotation
 float angle = 0.;
 float zoom = 1.;
+
+Terrain terrain(nX, nY, 10.0f, 10.0f);
+std::vector<unsigned short> indices; //Triangles concaténés dans une liste
+std::vector<std::vector<unsigned short> > triangles;
+std::vector<Vertex> indexed_vertices;
+GLuint vertexbuffer;    
+GLuint elementbuffer;
+
+
+void processInput(GLFWwindow *window);
+
 /*******************************************************************************/
 
 void checkGLError(const char* operation) {
@@ -55,7 +66,6 @@ void checkGLError(const char* operation) {
         std::cout << "OpenGL error after " << operation << ": " << error << std::endl;
     }
 }
-
 
 
 int main( void )
@@ -126,54 +136,34 @@ int main( void )
     // Get a handle for our "Model View Projection" matrices uniforms
 
     /****************************************/
-    std::vector<unsigned short> indices; //Triangles concaténés dans une liste
-    std::vector<std::vector<unsigned short> > triangles;
-    //std::vector<glm::vec3> indexed_vertices;
-
-    std::vector<Vertex> indexed_vertices;
 
     //Chargement du fichier de maillage
-    std::string filename("chair.off");
+    //std::string filename("chair.off");
     //loadOFF(filename, indexed_vertices, indices, triangles );
 
     //generate a terrain
-    Terrain terrain(64, 64, 10.0f, 10.0f);
     terrain.create(indices, triangles, indexed_vertices);
 
     // Create and load the textures
-    Texture heightMap("heightmap-1024x1024.png", true, false);
-    heightMap.load();
-    heightMap.createTexture();
-    heightMap.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+    Texture heightMap("heightmap-1024x1024.png", false);
+    heightMap.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-    heightMap.updateGLTexture();
+    Texture grassTexture("grass.png", false);
+    grassTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
     
-    Texture grassTexture("grass.png", true,false);
-    grassTexture.load();
-    grassTexture.createTexture();
-    grassTexture.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-    grassTexture.updateGLTexture();
-    
-    Texture rockTexture("rock.png", true,false);
-    rockTexture.load();
-    rockTexture.createTexture();
-    rockTexture.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-    rockTexture.updateGLTexture();
+    Texture rockTexture("rock.png", false);
+    rockTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-    Texture snowrockTexture("snowrocks.png", true,false);
-    snowrockTexture.load();
-    snowrockTexture.createTexture();
-    snowrockTexture.setParameters(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-    snowrockTexture.updateGLTexture();
+    Texture snowrockTexture("snowrocks.png", false);
+    snowrockTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
 
-    GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(Vertex), &indexed_vertices[0], GL_STATIC_DRAW);
 
     // Generate a buffer for the indices as well
-    GLuint elementbuffer;
+
     glGenBuffers(1, &elementbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0] , GL_STATIC_DRAW);
@@ -214,7 +204,7 @@ int main( void )
 
         // View matrix : camera/view transformation lookat() utiliser camera_position camera_target camera_up
 
-        glm::mat4 viewMatrix = glm::lookAt(camera_position, camera_target + camera_position, camera_up);
+        glm::mat4 viewMatrix = glm::lookAt(camera.getPosition(), camera.getTarget() + camera.getPosition(), camera.getUp());
 
         // Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 
@@ -348,44 +338,11 @@ int main( void )
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    terrain.handleInputs(window, vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
 
-    //Camera zoom in and out
-    float cameraSpeed = 2.5 * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera_position += cameraSpeed * camera_target;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera_position -= cameraSpeed * camera_target;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-        glm::vec3 camera_right = glm::cross(camera_up, camera_target);
-        camera_position += cameraSpeed * camera_right;
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-        glm::vec3 camera_right = glm::cross( camera_up, camera_target);
-        camera_position -= cameraSpeed * camera_right;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        rotation_angle += cameraSpeed;
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotation_angle, camera_up);
-        camera_target = glm::vec3(rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-    }
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        rotation_angle -= cameraSpeed;
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), rotation_angle, camera_up);
-        camera_target = glm::vec3(rotation * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        camera_target += cameraSpeed * camera_up; // pas ouf mais ok pour test texture
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        camera_target -= cameraSpeed * camera_up; // pas ouf mais ok pour test texture
-    }
-
-
+    camera.handleCameraInputs(deltaTime, window);
 }
+
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------

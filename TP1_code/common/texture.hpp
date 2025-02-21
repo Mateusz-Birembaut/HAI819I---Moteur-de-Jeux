@@ -5,12 +5,11 @@
 class Texture {
     public:
         Texture(const char* path = nullptr,
-                bool flipVertically = false,
-                bool flipHorizontally = false)
+                bool flipVertically = false)
         : path(path),
           width(0), height(0), nrChannels(0),
           data(nullptr),
-          flipVertically(flipVertically), flipHorizontally(flipHorizontally),
+          flipVertically(flipVertically),
           format(GL_RGB),
           textureID(0)
         {}
@@ -19,6 +18,13 @@ class Texture {
             if (data) {
                 stbi_image_free(data);
             }
+        }
+
+        void loadTexture(GLenum wrapS, GLenum wrapT, GLenum minFilter, GLenum magFilter) {
+            load();
+            createTexture();
+            setParameters(wrapS, wrapT, minFilter, magFilter);
+            updateGLTexture();
         }
     
         void load() {
@@ -80,7 +86,6 @@ class Texture {
         int nrChannels;
         unsigned char* data;
         bool flipVertically;
-        bool flipHorizontally;
     public:
         GLenum format;
         GLuint textureID;
