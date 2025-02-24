@@ -40,7 +40,7 @@ public:
                 v.position = glm::vec3(x, y, z);
                 //v.color = ...
                 //v.normal = ...
-                v.uv = glm::vec2( t_x, t_z );
+                v.uv = glm::vec2(t_x , t_z);
 
                 indexed_vertices.push_back(v);
             }

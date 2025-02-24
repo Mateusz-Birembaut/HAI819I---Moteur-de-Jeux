@@ -46,6 +46,14 @@ class Texture {
                 stbi_image_free(data);
                 data = nullptr;
             }
+            if (width % 2 == 0 && height % 2 == 0){
+                isPowerOfTwo = true;
+            }
+            
+            std::cout << "Loaded texture: " << path << std::endl;
+            std::cout << "Width: " << width << std::endl;
+            std::cout << "Height: " << height << std::endl;
+            std::cout << "Number of channels: " << nrChannels << std::endl;
         }
     
         void createTexture() {
@@ -54,11 +62,18 @@ class Texture {
         }
     
         void setParameters(GLenum wrapS, GLenum wrapT, GLenum minFilter, GLenum magFilter) {
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+            if (nrChannels == 1){
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+            }else {
+                glBindTexture(GL_TEXTURE_2D, textureID);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+            }
         }
     
         void updateGLTexture() {
@@ -86,6 +101,8 @@ class Texture {
         int nrChannels;
         unsigned char* data;
         bool flipVertically;
+        bool isPowerOfTwo;
+
     public:
         GLenum format;
         GLuint textureID;

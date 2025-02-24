@@ -130,7 +130,7 @@ int main( void )
 
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "vertex_shader.glsl", "fragment_shader.glsl" );
+    GLuint programID = LoadShaders( "Shaders/vertex_shader.glsl", "Shaders/fragment_shader.glsl" );
 
     /*****************TODO***********************/
     // Get a handle for our "Model View Projection" matrices uniforms
@@ -138,23 +138,24 @@ int main( void )
     /****************************************/
 
     //Chargement du fichier de maillage
-    //std::string filename("chair.off");
+    //std::string filename("Meshes/chair.off");
     //loadOFF(filename, indexed_vertices, indices, triangles );
 
     //generate a terrain
     terrain.create(indices, triangles, indexed_vertices);
 
     // Create and load the textures
-    Texture heightMap("heightmap-1024x1024.png", false);
+    Texture heightMap("Heightmaps/heightmap-1024x1024.png", false);
+    //Texture heightMap("Heightmap_Mountain.png", false);
     heightMap.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-    Texture grassTexture("grass.png", false);
+    Texture grassTexture("Textures/grass.png", false);
     grassTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
     
-    Texture rockTexture("rock.png", false);
+    Texture rockTexture("Textures/rock.png", false);
     rockTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-    Texture snowrockTexture("snowrocks.png", false);
+    Texture snowrockTexture("Textures/snowrocks.png", false);
     snowrockTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
 
@@ -201,16 +202,11 @@ int main( void )
         // Model matrix : an identity matrix (model will be at the origin) then change
         
         glm::mat4 modelMatrix = glm::mat4(1.0);
-
         // View matrix : camera/view transformation lookat() utiliser camera_position camera_target camera_up
-
         glm::mat4 viewMatrix = glm::lookAt(camera.getPosition(), camera.getTarget() + camera.getPosition(), camera.getUp());
-
         // Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-
         glm::mat4 projectionMatrix = glm::perspective(45.0f, 4.f / 3.f, 0.1f, 100.0f);
 
-            
         // Send our transformation to the currently bound shader,
         // in the "Model View Projection" to the shader uniforms
 
