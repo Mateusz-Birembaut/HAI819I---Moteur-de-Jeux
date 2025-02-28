@@ -30,8 +30,8 @@ using namespace glm;
 #include <common/camera.hpp>
 
 //params
-int nX = 64;
-int nY = 64;
+int nX = 16;
+int nY = 16;
 
 // settings
 const unsigned int SCR_WIDTH = 800;

@@ -1,6 +1,7 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
+#define DEBUG_TEXTURE false
 
 class Texture {
     public:
@@ -49,11 +50,14 @@ class Texture {
             if (width % 2 == 0 && height % 2 == 0){
                 isPowerOfTwo = true;
             }
+            if (DEBUG_TEXTURE) {
+                std::cout << "Loaded texture: " << path << std::endl;
+                std::cout << "Width: " << width << std::endl;
+                std::cout << "Height: " << height << std::endl;
+                std::cout << "Number of channels: " << nrChannels << std::endl;
+            }
             
-            std::cout << "Loaded texture: " << path << std::endl;
-            std::cout << "Width: " << width << std::endl;
-            std::cout << "Height: " << height << std::endl;
-            std::cout << "Number of channels: " << nrChannels << std::endl;
+
         }
     
         void createTexture() {

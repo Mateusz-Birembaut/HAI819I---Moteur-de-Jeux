@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define DEBUG_CAMERA true
+
 enum CAMERA_CONTROL { FREE, ORBIT };
 
 const glm::vec3 WORLD_UP = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -71,12 +73,14 @@ public:
             rotation_angle -= glm::radians(360.0f);
         }
         
-        // Calculer la nouvelle position
         position.x = orbit_center.x + orbit_distance * cos(rotation_angle);
         position.z = orbit_center.z + orbit_distance * sin(rotation_angle);
         
         target = orbit_center - position;
         target = glm::normalize(target);
+
+        glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
+        up = glm::cross(camera_right, target );
     }
 
     void handleCameraInputs(float deltaTime, GLFWwindow* window){
@@ -131,25 +135,37 @@ public:
             }
     
             if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-                vertical_angle += cameraSpeed;
-                vertical_angle = glm::min(vertical_angle, glm::radians(85.0f));
-                
-                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
-                glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), cameraSpeed, camera_right);
-                target = glm::vec3(rotation * glm::vec4(target, 0.0f));
-                target = glm::normalize(target);
-                up = WORLD_UP;  // Maintenir up vertical
+                if (vertical_angle < MAX_VERTICAL_ANGLE) {
+                    vertical_angle += cameraSpeed;
+                    
+                    glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
+                    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), cameraSpeed, camera_right);
+                    target = glm::vec3(rotation * glm::vec4(target, 0.0f));
+                    target = glm::normalize(target);
+                    up = glm::normalize(glm::cross(camera_right, target));
+                }
             }
             
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-                vertical_angle -= cameraSpeed;
-                vertical_angle = glm::max(vertical_angle, glm::radians(-85.0f));
-                
-                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
-                glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -cameraSpeed, camera_right);
-                target = glm::vec3(rotation * glm::vec4(target, 0.0f));
-                target = glm::normalize(target);
-                up = WORLD_UP;  // Maintenir up vertical
+                if (vertical_angle > -MAX_VERTICAL_ANGLE) {
+                    vertical_angle -= cameraSpeed;
+                    
+                    glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
+                    if (glm::length(camera_right) > 0.001f) {
+                        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -cameraSpeed, camera_right);
+                        target = glm::vec3(rotation * glm::vec4(target, 0.0f));
+                        target = glm::normalize(target);
+                        up = glm::normalize(glm::cross(camera_right, target));
+                    }
+                }
+            }
+
+            if (DEBUG_CAMERA){
+                std::cout << "Position: " << position.x << " " << position.y << " " << position.z << std::endl;
+                std::cout << "Target: " << target.x << " " << target.y << " " << target.z << std::endl;
+                std::cout << "Up: " << up.x << " " << up.y << " " << up.z << std::endl;
+                std::cout << "Vertical angle: " << vertical_angle << std::endl;
+                std::cout << "Rotation angle: " << rotation_angle << std::endl;
             }
 
         }else if (camera_control == ORBIT){
@@ -176,6 +192,15 @@ public:
             }
 
             orbit(deltaTime, glm::vec3(0.0f, 0.0f, 0.0f));
+
+            if (DEBUG_CAMERA){
+                std::cout << "Position: " << position.x << " " << position.y << " " << position.z << std::endl;
+                std::cout << "Target: " << target.x << " " << target.y << " " << target.z << std::endl;
+                std::cout << "Up: " << up.x << " " << up.y << " " << up.z << std::endl;
+                std::cout << "Orbit distance: " << orbit_distance << std::endl;
+                std::cout << "Orbit speed: " << orbit_speed << std::endl;
+            }
+
         }
     }
 
