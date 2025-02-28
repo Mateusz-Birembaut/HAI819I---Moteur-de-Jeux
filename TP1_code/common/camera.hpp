@@ -81,6 +81,7 @@ public:
 
         glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
         up = glm::cross(camera_right, target );
+        up = glm::normalize(up);
     }
 
     void handleCameraInputs(float deltaTime, GLFWwindow* window){
@@ -102,12 +103,12 @@ public:
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 position -= cameraSpeed * target;
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
-                glm::vec3 camera_right = glm::cross(up, target);
-                position += cameraSpeed * camera_right;
+                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
+                position -= cameraSpeed * camera_right;
             }
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
-                glm::vec3 camera_right = glm::cross( up, target);
-                position -= cameraSpeed * camera_right;
+                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
+                position += cameraSpeed * camera_right;
             }
 
             if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
@@ -115,10 +116,10 @@ public:
                 if (rotation_angle > glm::radians(360.0f)) {
                     rotation_angle -= glm::radians(360.0f);
                 }
-                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
                 glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), cameraSpeed, WORLD_UP);
-                target = glm::vec3(rotation * glm::vec4(target, 0.0f));
-                target = glm::normalize(target);
+                target = glm::normalize(glm::vec3(rotation * glm::vec4(target, 0.0f)));
+
+                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
                 up = glm::normalize(glm::cross(camera_right, target));
             }
             
@@ -127,10 +128,10 @@ public:
                 if (rotation_angle < glm::radians(-360.0f)) {
                     rotation_angle += glm::radians(360.0f);
                 }
-                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
                 glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -cameraSpeed, WORLD_UP);
-                target = glm::vec3(rotation * glm::vec4(target, 0.0f));
-                target = glm::normalize(target);
+                target = glm::normalize(glm::vec3(rotation * glm::vec4(target, 0.0f)));
+
+                glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
                 up = glm::normalize(glm::cross(camera_right, target));
             }
     
@@ -140,8 +141,7 @@ public:
                     
                     glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
                     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), cameraSpeed, camera_right);
-                    target = glm::vec3(rotation * glm::vec4(target, 0.0f));
-                    target = glm::normalize(target);
+                    target = glm::normalize(glm::vec3(rotation * glm::vec4(target, 0.0f)));
                     up = glm::normalize(glm::cross(camera_right, target));
                 }
             }
@@ -153,8 +153,7 @@ public:
                     glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
                     if (glm::length(camera_right) > 0.001f) {
                         glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -cameraSpeed, camera_right);
-                        target = glm::vec3(rotation * glm::vec4(target, 0.0f));
-                        target = glm::normalize(target);
+                        target = glm::normalize(glm::vec3(rotation * glm::vec4(target, 0.0f)));
                         up = glm::normalize(glm::cross(camera_right, target));
                     }
                 }
