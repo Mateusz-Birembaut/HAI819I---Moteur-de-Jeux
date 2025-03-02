@@ -5,14 +5,15 @@
 
 class Texture {
     public:
-        Texture(const char* path = nullptr,
-                bool flipVertically = false)
-        : path(path),
-          width(0), height(0), nrChannels(0),
-          data(nullptr),
-          flipVertically(flipVertically),
-          format(GL_RGB),
-          textureID(0)
+        Texture(const char* path = nullptr, bool flipVertically = false): 
+            path(path),
+            width(0), 
+            height(0), 
+            nrChannels(0),
+            data(nullptr),
+            flipVertically(flipVertically),
+            format(GL_RGB),
+            textureID(0)
         {}
     
         ~Texture() {
@@ -55,6 +56,8 @@ class Texture {
                 std::cout << "Width: " << width << std::endl;
                 std::cout << "Height: " << height << std::endl;
                 std::cout << "Number of channels: " << nrChannels << std::endl;
+                std::cout << "Format: " << format << std::endl;
+                std::cout << "Is power of two: " << isPowerOfTwo << std::endl;
             }
             
 

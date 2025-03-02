@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define DEBUG_CAMERA true
+#define DEBUG_CAMERA false
 
 enum CAMERA_CONTROL { FREE, ORBIT };
 
@@ -151,11 +151,9 @@ public:
                     vertical_angle -= cameraSpeed;
                     
                     glm::vec3 camera_right = glm::normalize(glm::cross(target, WORLD_UP));
-                    if (glm::length(camera_right) > 0.001f) {
-                        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -cameraSpeed, camera_right);
-                        target = glm::normalize(glm::vec3(rotation * glm::vec4(target, 0.0f)));
-                        up = glm::normalize(glm::cross(camera_right, target));
-                    }
+                    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), -cameraSpeed, camera_right);
+                    target = glm::normalize(glm::vec3(rotation * glm::vec4(target, 0.0f)));
+                    up = glm::normalize(glm::cross(camera_right, target));
                 }
             }
 

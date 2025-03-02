@@ -7,39 +7,38 @@
 class Terrain {
 private:
     int VertexCountX;
-    int VertexCountY;
+    int VertexCountZ;
     float sizeX;
-    float sizeY; 
+    float sizeZ; 
+    float originX;
+    float originZ;
 
 public:
     Terrain() 
-      : VertexCountX(10), VertexCountY(10), sizeX(1.0f), sizeY(1.0f) {}
+      : VertexCountX(10), VertexCountZ(10), sizeX(1.0f), sizeZ(1.0f), originX(0.0f), originZ(0.0f) {}
 
-    Terrain(int nX, int nY, float sX = 2.0f, float sY = 2.0f)
-      : VertexCountX(nX), VertexCountY(nY), sizeX(sX), sizeY(sY) {}
+    Terrain(int nX, int nY, float sX = 1.0f, float sY = 1.0f, float oX = 0.0f, float oZ = 0.0f)
+      : VertexCountX(nX), VertexCountZ(nY), sizeX(sX), sizeZ(sY), originX(oX), originZ(oZ) {}
 
-    void create(std::vector<unsigned short> & indices, 
-                std::vector<std::vector<unsigned short> > & triangles,
-                std::vector<Vertex> & indexed_vertices)
-    {
+    void create(std::vector<unsigned short> & indices, std::vector<std::vector<unsigned short> > & triangles, std::vector<Vertex> & indexed_vertices){
         indices.clear();
         triangles.clear();
         indexed_vertices.clear();
 
         for (int i = 0; i < VertexCountX; i++) {
-            for (int j = 0; j < VertexCountY; j++) {
+            for (int j = 0; j < VertexCountZ; j++) {
                 float t_x = float(i) / float(VertexCountX - 1);
-                float t_z = float(j) / float(VertexCountY - 1);
+                float t_z = float(j) / float(VertexCountZ - 1);
 
-                float x = t_x * sizeX - (sizeX * 0.5f);
-                float z = t_z * sizeY - (sizeY * 0.5f);
+                float x = t_x * sizeX - (sizeX * 0.5f) + originX;
+                float z = t_z * sizeZ - (sizeZ * 0.5f) + originZ;
 
                 float y = 0.0f;
 
                 Vertex v;
                 v.position = glm::vec3(x, y, z);
-                //v.color = ...
-                //v.normal = ...
+                //v.color = 
+                //v.normal = 
                 v.uv = glm::vec2(t_x , t_z);
 
                 indexed_vertices.push_back(v);
@@ -47,8 +46,8 @@ public:
         }
 
         for (int i = 0; i < VertexCountX; i ++) {
-            for (int j = 0; j < VertexCountY; j++) {
-                if(i != VertexCountX - 1 && j != VertexCountY - 1){
+            for (int j = 0; j < VertexCountZ; j++) {
+                if(i != VertexCountX - 1 && j != VertexCountZ - 1){
                     unsigned short baseIndex       = i * VertexCountX + j;
                     unsigned short rightNeighbor   = i * VertexCountX + (j + 1);
                     unsigned short topNeighbor     = (i + 1) * VertexCountX + j;
@@ -88,11 +87,11 @@ public:
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
 
-        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS && VertexCountY < 256) {
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS && VertexCountZ < 256) {
             if (!zPressed) {
                 VertexCountX++;
-                VertexCountY++;
-                std::cout << VertexCountX << " " << VertexCountY << std::endl;
+                VertexCountZ++;
+                std::cout << VertexCountX << " " << VertexCountZ << std::endl;
                 generate(vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
                 zPressed = true;
             }
@@ -100,11 +99,11 @@ public:
             zPressed = false;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS && VertexCountY > 2) {
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS && VertexCountZ > 2) {
             if (!xPressed) {
                 VertexCountX--;
-                VertexCountY--;
-                std::cout << VertexCountX << " " << VertexCountY << std::endl;
+                VertexCountZ--;
+                std::cout << VertexCountX << " " << VertexCountZ << std::endl;
                 generate(vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
                 xPressed = true;
             }

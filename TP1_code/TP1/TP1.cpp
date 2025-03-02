@@ -48,8 +48,8 @@ float lastFrame = 0.0f;
 float angle = 0.;
 float zoom = 1.;
 
-Terrain terrain(nX, nY, 10.0f, 10.0f);
-std::vector<unsigned short> indices; //Triangles concaténés dans une liste
+Terrain terrain(nX, nY, 5.0f, 5.0f, 0.0f, 0.0f);
+std::vector<unsigned short> indices; 
 std::vector<std::vector<unsigned short> > triangles;
 std::vector<Vertex> indexed_vertices;
 GLuint vertexbuffer;    
@@ -146,7 +146,8 @@ int main( void )
 
     // Create and load the textures
     Texture heightMap("Heightmaps/heightmap-1024x1024.png", false);
-    //Texture heightMap("Heightmap_Mountain.png", false);
+    //Texture heightMap("Heightmaps/Heightmap_Mountain.png", false);
+    //Texture heightMap("Heightmaps/Heightmap_MountainTest.png", false);
     heightMap.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
     Texture grassTexture("Textures/grass.png", false);

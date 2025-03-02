@@ -20,12 +20,9 @@ float rand(vec2 co){
 
 void main(){
 
-        //color = fragNormal;
         vec4 grassT = texture(u_grassTexture, fragUV);
         vec4 rockT = texture(u_rockTexture, fragUV);
         vec4 snowrockT = texture(u_snowrockTexture, fragUV);
-        
-        //float rand = (0.5 - rand(fragUV))/10.0;
 
         vec4 color1 = mix(grassT, rockT, smoothstep(0.2, 0.3, fragPosition.y ));
         color = mix(color1, snowrockT, smoothstep(0.4, 0.5, fragPosition.y ));
@@ -33,11 +30,3 @@ void main(){
         //color = texture(u_heightMap, fragUV);
         
 }
-
-/* uniform sampler2D u_heightMap;
-
-void main(){
-        color = texture(u_heightMap, fragUV);
-        
-}
- */
