@@ -16,15 +16,18 @@ protected:
     std::vector<unsigned short> indexes;
 
 public:
+    Mesh(){}
+
     virtual ~Mesh() {
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &EBO);
-        glDeleteVertexArrays(1, &VAO);
     }
 
-    // implemted by other classes
-    virtual void create() = 0; 
-    virtual void draw(GLuint shaderProgram) = 0; 
+    virtual void create() {
+        //std::cout << "Warning: Using default Mesh::create() implementation" << std::endl;
+    }
+    
+    virtual void draw(GLuint shaderProgram) {
+        //std::cout << "Warning: Trying to draw uninitialized mesh" << std::endl;
+    }
 
     // Buffer creation
     void createBuffers() {
@@ -50,8 +53,6 @@ public:
 
         glBindVertexArray(0);
     }
-
-
 };
 
 #endif

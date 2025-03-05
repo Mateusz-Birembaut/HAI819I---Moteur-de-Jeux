@@ -33,7 +33,7 @@ class Transform{
             return glm::translate(glm::mat4(1.0f), translation) * roationMatrix * glm::scale(glm::mat4(1.0f), scale);
         }
 
-}
+};
 
 
 #endif

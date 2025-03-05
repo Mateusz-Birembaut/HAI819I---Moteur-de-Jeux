@@ -62,6 +62,46 @@ void checkGLError(const char* operation) {
     }
 }
 
+// Créer un grand nombre de sphères pour tester les performances
+std::vector<GameObject<Sphere>*> generatePerformanceSpheres(int count) {
+    std::vector<GameObject<Sphere>*> spheres;
+    spheres.reserve(count);
+    
+    // Une seule instance de Sphere que tous les GameObjects partageront
+    Sphere baseSphere(20, 20, 0.5f);
+    
+    // Calculer la taille de la grille 3D pour disposer les objets
+    float gridSize = std::ceil(std::cbrt(count));
+    float spacing = 3.0f;
+    
+    for (int i = 0; i < count; i++) {
+        GameObject<Sphere>* obj = new GameObject<Sphere>();
+        obj->mesh = baseSphere; // Tous partagent la même mesh
+        
+        // Positionner en grille 3D
+        int x = i % int(gridSize);
+        int y = (i / int(gridSize)) % int(gridSize);
+        int z = i / (int(gridSize) * int(gridSize));
+        
+        obj->transformation.translation = glm::vec3(
+            (x - gridSize/2) * spacing,
+            (y - gridSize/2) * spacing,
+            (z - gridSize/2) * spacing
+        );
+        
+        // Rotation initiale aléatoire
+        obj->transformation.eulerRot = glm::vec3(
+            rand() % 360,
+            rand() % 360,
+            rand() % 360
+        );
+        
+        spheres.push_back(obj);
+    }
+    
+    return spheres;
+}
+
 
 int main( void )
 {
@@ -140,10 +180,22 @@ int main( void )
 
     //Terrain terrain2(nX, nY, 5.0f, 5.0f, 5.0f, 0.0f);
 
-    Sphere sphere(20,20, 1.0f, glm::vec3(0.0f,7.0f,0.0f)); 
+/*     Sphere sphere(20,20, 1.0f, glm::vec3(0.0f,7.0f,0.0f)); 
 
-    GameObject go1;
+    GameObject<Sphere> go1;
     go1.mesh = sphere;
+    go1.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
+
+    
+    GameObject<Sphere> go2;
+    go2.mesh = sphere;
+    go2.transformation.translation = glm::vec3(2.0f, 0.0f, 0.0f); 
+
+    go1.addChild(&go2); */
+
+    int sphereCount = 10000;
+    std::vector<GameObject<Sphere>*> testSpheres = generatePerformanceSpheres(sphereCount);
+
 
     // Create and load the textures
     //Texture heightMap("Heightmaps/heightmap-1024x1024.png", false);
@@ -246,7 +298,15 @@ int main( void )
         //terrain2.draw(programID);
 
         //sphere.draw(programID);
-        go1.draw();
+
+        for (auto& sphere : testSpheres) {
+
+            sphere->transformation.eulerRot.y += deltaTime * 20.0f;
+
+            sphere->updateSelfAndChild();
+            sphere->draw(programID);
+        }
+
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -267,6 +327,7 @@ int main( void )
 
     return 0;
 }
+
 
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
