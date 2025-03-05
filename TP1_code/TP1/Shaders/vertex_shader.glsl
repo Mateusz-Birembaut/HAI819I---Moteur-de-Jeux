@@ -27,7 +27,7 @@ void main(){
         mat4 mvp = u_projection * u_view * u_model;
         vec3 modified_position = vertices_position_modelspace;
         modified_position.y = texture(u_heightMap, uv).r;
-        gl_Position = mvp * vec4(modified_position, 1.0);
+        gl_Position = mvp * vec4(vertices_position_modelspace, 1.0); // modified_position pour les terrains
         fragPosition = u_model * vec4(modified_position, 1.0);
         fragColor = color;
         fragNormal = normal;

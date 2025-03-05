@@ -28,6 +28,9 @@ using namespace glm;
 #include <common/terrain.hpp>
 #include <common/texture.hpp>
 #include <common/camera.hpp>
+#include <common/Mesh.hpp>
+#include <common/sphere.hpp>
+#include <common/GameObject.hpp>
 
 //params
 int nX = 16;
@@ -47,14 +50,6 @@ float lastFrame = 0.0f;
 //rotation
 float angle = 0.;
 float zoom = 1.;
-
-Terrain terrain(nX, nY, 5.0f, 5.0f, 0.0f, 0.0f);
-std::vector<unsigned short> indices; 
-std::vector<std::vector<unsigned short> > triangles;
-std::vector<Vertex> indexed_vertices;
-GLuint vertexbuffer;    
-GLuint elementbuffer;
-
 
 void processInput(GLFWwindow *window);
 
@@ -141,13 +136,19 @@ int main( void )
     //std::string filename("Meshes/chair.off");
     //loadOFF(filename, indexed_vertices, indices, triangles );
 
-    //generate a terrain
-    terrain.create(indices, triangles, indexed_vertices);
+    //Terrain terrain(nX, nY, 5.0f, 5.0f, 0.0f, 0.0f);
+
+    //Terrain terrain2(nX, nY, 5.0f, 5.0f, 5.0f, 0.0f);
+
+    Sphere sphere(20,20, 1.0f, glm::vec3(0.0f,7.0f,0.0f)); 
+
+    GameObject go1;
+    go1.mesh = sphere;
 
     // Create and load the textures
-    Texture heightMap("Heightmaps/heightmap-1024x1024.png", false);
+    //Texture heightMap("Heightmaps/heightmap-1024x1024.png", false);
     //Texture heightMap("Heightmaps/Heightmap_Mountain.png", false);
-    //Texture heightMap("Heightmaps/Heightmap_MountainTest.png", false);
+    Texture heightMap("Heightmaps/Heightmap_MountainTest.png", false);
     heightMap.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
     Texture grassTexture("Textures/grass.png", false);
@@ -160,15 +161,10 @@ int main( void )
     snowrockTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
 
+    GLuint vertexbuffer;
+    GLuint elementbuffer;
     glGenBuffers(1, &vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(Vertex), &indexed_vertices[0], GL_STATIC_DRAW);
-
-    // Generate a buffer for the indices as well
-
     glGenBuffers(1, &elementbuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0] , GL_STATIC_DRAW);
 
     // Get a handle for our "LightPosition" uniform
     glUseProgram(programID);
@@ -221,60 +217,6 @@ int main( void )
 
         /****************************************/
 
-        // 1rst attribute buffer : vertices
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                    0,                  // attribute
-                    3,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    sizeof(Vertex),                  // stride
-                    (void*)0            // array buffer offset
-                    );
-
-
-        // couleur
-        glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                    1,                  // attribute
-                    3,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    sizeof(Vertex),                  // stride
-                    (void*)sizeof(glm::vec3)            // array buffer offset
-                    );
-
-        // normal
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                    2,                  // attribute
-                    3,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    sizeof(Vertex),                  // stride
-                    (void*)(sizeof(glm::vec3) * 2)            // array buffer offset
-                    );
-
-        // uv
-        glEnableVertexAttribArray(3);
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glVertexAttribPointer(
-                    3,                  // attribute
-                    2,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    sizeof(Vertex),                  // stride
-                    (void*)(sizeof(glm::vec3) * 3)           // array buffer offset
-                    );
-
-
-
-
-        // Index buffer
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
 
         // activer texture
         glActiveTexture(GL_TEXTURE0);
@@ -300,15 +242,11 @@ int main( void )
         glUniform1i(textureID3, 2); 
         glUniform1i(textureID4, 3); 
 
-        // Draw the triangles !
-        glDrawElements(
-                    GL_TRIANGLES,      // mode
-                    indices.size(),    // count
-                    GL_UNSIGNED_SHORT,   // type
-                    (void*)0           // element array buffer offset
-                    );
+        //terrain.draw(programID);
+        //terrain2.draw(programID);
 
-        glDisableVertexAttribArray(0);
+        //sphere.draw(programID);
+        go1.draw();
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -335,7 +273,7 @@ int main( void )
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    terrain.handleInputs(window, vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
+    //terrain.handleInputs(window);
 
     camera.handleCameraInputs(deltaTime, window);
 }

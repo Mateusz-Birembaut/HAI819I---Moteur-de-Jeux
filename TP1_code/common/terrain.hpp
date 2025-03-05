@@ -1,10 +1,12 @@
-//// filepath: /home/mat/HAI819I---Moteur-de-Jeux/TP1_code/common/terrain.hpp
 #ifndef TERRAIN_HPP
 #define TERRAIN_HPP
 
+#include "Mesh.hpp"
 #include "structs.hpp"
+#include <GLFW/glfw3.h>
 
-class Terrain {
+
+class Terrain : public Mesh {
 private:
     int VertexCountX;
     int VertexCountZ;
@@ -18,12 +20,13 @@ public:
       : VertexCountX(10), VertexCountZ(10), sizeX(1.0f), sizeZ(1.0f), originX(0.0f), originZ(0.0f) {}
 
     Terrain(int nX, int nY, float sX = 1.0f, float sY = 1.0f, float oX = 0.0f, float oZ = 0.0f)
-      : VertexCountX(nX), VertexCountZ(nY), sizeX(sX), sizeZ(sY), originX(oX), originZ(oZ) {}
+      : VertexCountX(nX), VertexCountZ(nY), sizeX(sX), sizeZ(sY), originX(oX), originZ(oZ) {
+        create(); 
+      }
 
-    void create(std::vector<unsigned short> & indices, std::vector<std::vector<unsigned short> > & triangles, std::vector<Vertex> & indexed_vertices){
-        indices.clear();
-        triangles.clear();
-        indexed_vertices.clear();
+    void create() override {
+        vertices.clear();
+        indexes.clear();
 
         for (int i = 0; i < VertexCountX; i++) {
             for (int j = 0; j < VertexCountZ; j++) {
@@ -41,7 +44,7 @@ public:
                 //v.normal = 
                 v.uv = glm::vec2(t_x , t_z);
 
-                indexed_vertices.push_back(v);
+                vertices.push_back(v);
             }
         }
 
@@ -53,34 +56,31 @@ public:
                     unsigned short topNeighbor     = (i + 1) * VertexCountX + j;
                     unsigned short topRightNeighbor = (i + 1) * VertexCountX + (j + 1);
 
-                    indices.push_back(baseIndex);
-                    indices.push_back(topNeighbor);
-                    indices.push_back(rightNeighbor);
-                    triangles.push_back({ baseIndex, topNeighbor, rightNeighbor });
+                    indexes.push_back(baseIndex);
+                    indexes.push_back(topNeighbor);
+                    indexes.push_back(rightNeighbor);
 
-                    indices.push_back(topRightNeighbor);
-                    indices.push_back(rightNeighbor);
-                    indices.push_back(topNeighbor);
-                    triangles.push_back({ topRightNeighbor, rightNeighbor, topNeighbor });
+                    indexes.push_back(topRightNeighbor);
+                    indexes.push_back(rightNeighbor);
+                    indexes.push_back(topNeighbor);
                 }
             }
         }
+
+        createBuffers();
+
     }
 
-    void generate(GLuint vertexbuffer, GLuint elementbuffer, std::vector<unsigned short> & indices, 
-                  std::vector<std::vector<unsigned short> > & triangles, std::vector<Vertex> & indexed_vertices){
-
-        create(indices, triangles, indexed_vertices);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-        glBufferData(GL_ARRAY_BUFFER, indexed_vertices.size() * sizeof(Vertex), &indexed_vertices[0], GL_STATIC_DRAW);
-    
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &indices[0], GL_STATIC_DRAW);
+    void draw(GLuint shaderProgram) override {
+        glUseProgram(shaderProgram);
+        
+        // Set uniforms
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, indexes.size(), GL_UNSIGNED_SHORT, 0);
+        glBindVertexArray(0);
     }
 
-    void handleInputs(GLFWwindow *window, GLuint vertexbuffer, GLuint elementbuffer, std::vector<unsigned short> & indices, 
-                     std::vector<std::vector<unsigned short> > & triangles, std::vector<Vertex> & indexed_vertices) {
+    void handleInputs(GLFWwindow *window) {
         static bool zPressed = false;
         static bool xPressed = false;
 
@@ -92,7 +92,7 @@ public:
                 VertexCountX++;
                 VertexCountZ++;
                 std::cout << VertexCountX << " " << VertexCountZ << std::endl;
-                generate(vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
+                create();
                 zPressed = true;
             }
         } else {
@@ -104,13 +104,15 @@ public:
                 VertexCountX--;
                 VertexCountZ--;
                 std::cout << VertexCountX << " " << VertexCountZ << std::endl;
-                generate(vertexbuffer, elementbuffer, indices, triangles, indexed_vertices);
+                create();
                 xPressed = true;
             }
         } else {
             xPressed = false;
         }
     }
+
+
 
 };
 
