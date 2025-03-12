@@ -18,6 +18,8 @@ class GameObject{
 
         MeshType mesh;
     
+        int objectID = 0;
+
         GameObject() : parent(nullptr){}
 
 
@@ -40,6 +42,9 @@ class GameObject{
         }
 
         void draw(GLuint shaderProgram) {
+            GLuint objectIDLoc = glGetUniformLocation(shaderProgram, "objectID");
+            glUniform1i(objectIDLoc, objectID);
+
             GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]);        
 

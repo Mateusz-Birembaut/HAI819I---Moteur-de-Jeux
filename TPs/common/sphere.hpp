@@ -21,7 +21,7 @@ class Sphere : public Mesh {
             create(); 
         }
 
-        void create() override{
+        void create() override {
             vertices.clear();
             indexes.clear();
 
@@ -42,10 +42,19 @@ class Sphere : public Mesh {
                     y = xy * sinf(sectorAngle);         // y coordinate
 
                     Vertex v;
-                    v.position = glm::vec3(x, y, z);
+                    // Modifier l'orientation des coordonnées pour que Z soit l'axe vertical (haut-bas)
+                    v.position = glm::vec3(x, z, y);  // Modifié: permutation des coordonnées y et z
                     v.color = glm::vec3(0.0f, 1.0f, 0.0f); // green color for sphere
-                    v.normal = glm::vec3(x, y, z);        // normal is the same as position
-                    v.uv = glm::vec2(float(j) / VertexCountX, float(i) / VertexCountY);  // texture coordinates
+                    
+                    // Normaliser correctement la normale en fonction des nouvelles coordonnées
+                    v.normal = glm::normalize(glm::vec3(x, z, y));
+                    
+                    // Coordonnées UV ajustées pour les mappings de textures terrestres
+                    // Longitude (j) -> U, avec décalage pour avoir Greenwich au bon endroit
+                    // Latitude (i) -> V inversé pour que le pôle nord soit en haut
+                    float u = float(j) / VertexCountX;
+                    u = fmod(u - 0.25f, 1.0f); // Décalage pour aligner les continents
+                    v.uv = glm::vec2(u, 1.0f - (float(i) / VertexCountY));
 
                     vertices.push_back(v);
                 }
