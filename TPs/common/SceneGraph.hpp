@@ -10,10 +10,7 @@
 class SceneGraph {
     
 private:
-    std::vector<void*> rootObjects;
-    std::vector<void(*)(void*, GLuint)> drawFunctions;
-    std::vector<void(*)(void*)> updateFunctions;
-    std::vector<void(*)(void*)> deleteFunctions;
+    std::vector<GameObject*> rootObjects;
     
 public:
     SceneGraph() {}
@@ -22,65 +19,39 @@ public:
         clear();
     }
     
-    template<typename MeshType>
-    void addObject(GameObject<MeshType>* object) {
+    void addObject(GameObject * object) {
         if (!object) return;
         
         if (object->parent == nullptr) {
-            rootObjects.push_back(static_cast<void*>(object));
-            
-            drawFunctions.push_back([](void* obj, GLuint shader) {
-                GameObject<MeshType>* gameObj = static_cast<GameObject<MeshType>*>(obj);
-                gameObj->draw(shader);
-            });
-            
-            updateFunctions.push_back([](void* obj) {
-                GameObject<MeshType>* gameObj = static_cast<GameObject<MeshType>*>(obj);
-                gameObj->updateSelfAndChild();
-            });
-            
-            deleteFunctions.push_back([](void* obj) {
-                GameObject<MeshType>* gameObj = static_cast<GameObject<MeshType>*>(obj);
-                delete gameObj;
-            });
+            rootObjects.push_back(object);
         }
     }
     
-    template<typename MeshType>
-    void removeObject(GameObject<MeshType>* object) {
+    void removeObject(GameObject * object) {
         if (!object) return;
         
         for (size_t i = 0; i < rootObjects.size(); ++i) {
-            if (rootObjects[i] == static_cast<void*>(object)) {
+            if (rootObjects[i] == object) {
                 rootObjects.erase(rootObjects.begin() + i);
-                drawFunctions.erase(drawFunctions.begin() + i);
-                updateFunctions.erase(updateFunctions.begin() + i);
-                deleteFunctions.erase(deleteFunctions.begin() + i);
                 break;
             }
         }
     }
     
-    void updateAll() {
+    void updateAll(float deltaTime) {
         for (size_t i = 0; i < rootObjects.size(); ++i) {
-            updateFunctions[i](rootObjects[i]);
+            rootObjects[i]->updateSelfAndChild(deltaTime);
         }
     }
     
     void drawAll(GLuint shaderProgram) {
         for (size_t i = 0; i < rootObjects.size(); ++i) {
-            drawFunctions[i](rootObjects[i], shaderProgram);
+            rootObjects[i]->drawSelfAndChild(shaderProgram);
         }
     }
     
     void clear() {
-        for (size_t i = 0; i < rootObjects.size(); ++i) {
-            deleteFunctions[i](rootObjects[i]);
-        }
         rootObjects.clear();
-        drawFunctions.clear();
-        updateFunctions.clear();
-        deleteFunctions.clear();
     }
     
     size_t size() const {

@@ -1,29 +1,19 @@
 #ifndef SPHERE_HPP
 #define SPHERE_HPP
 
+#include "structs.hpp"
 #include "Mesh.hpp"
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 
-class Sphere : public Mesh {
-    private:
-        int VertexCountX;
-        int VertexCountY;
-        float radius;
-        glm::vec3 origin;
+class Sphere {
+
 
     public:
 
-        Sphere() : VertexCountX(10), VertexCountY(10), radius(1.0f), origin({0.0f,0.0f, 0.0f }) {}
-
-        Sphere(int nX, int nY, float r = 1.0f, glm::vec3 o = {0.0f,0.0f, 0.0f})
-        : VertexCountX(nX), VertexCountY(nY), radius(r), origin(o) {
-            create(); 
-        }
-
-        void create() override {
-            vertices.clear();
-            indexes.clear();
+        static void create(Mesh & mesh, int VertexCountX, int VertexCountY, float radius ) {
+            std::vector<Vertex> vertices;
+            std::vector<unsigned short> indexes;
 
             float x, y, z, xy;                          // vertex position
             float sectorStep = 2 * M_PI / VertexCountX;   // angle increment
@@ -59,7 +49,6 @@ class Sphere : public Mesh {
                     vertices.push_back(v);
                 }
             }
-
             // indices for drawing triangles
             unsigned short k1, k2;
             for (int i = 0; i < VertexCountY; ++i) {
@@ -69,29 +58,23 @@ class Sphere : public Mesh {
                 for (int j = 0; j < VertexCountX; ++j, ++k1, ++k2) {
                     if (i != 0) {
                         indexes.push_back(k1);
-                        indexes.push_back(k2);
                         indexes.push_back(k1 + 1);
+                        indexes.push_back(k2);
                     }
                     if (i != (VertexCountY - 1)) {
                         indexes.push_back(k1 + 1);
-                        indexes.push_back(k2);
                         indexes.push_back(k2 + 1);
+                        indexes.push_back(k2);
                     }
                 }
             }
 
-            createBuffers();
+
+            mesh.setVertices(vertices);
+            mesh.setIndexes(indexes);
+            mesh.createBuffers();
         }
 
-
-        void draw(GLuint shaderProgram) override {
-            glUseProgram(shaderProgram);
-            
-            // Set uniforms
-            glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, indexes.size(), GL_UNSIGNED_SHORT, 0);
-            glBindVertexArray(0);
-        }
 };
     
 

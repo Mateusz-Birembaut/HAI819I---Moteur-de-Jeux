@@ -2,12 +2,12 @@
 #define GAME_OBJECT_HPP
 
 #include "Mesh.hpp"
+#include "texture.hpp"
 #include "Transform.hpp"
 #include <glm/fwd.hpp>
 #include <list>
 #include <memory>
 
-template<typename MeshType>
 class GameObject{
 
     public:
@@ -16,11 +16,13 @@ class GameObject{
 
         Transform transformation; 
 
-        MeshType mesh;
+        Texture * texture;
+
+        Mesh * mesh;
     
         int objectID = 0;
 
-        GameObject() : parent(nullptr){}
+        GameObject() : parent(nullptr), texture(nullptr), mesh(nullptr){}
 
 
         void addChild(GameObject * child) {
@@ -30,28 +32,28 @@ class GameObject{
             }
         }
 
-        void updateSelfAndChild(){
+        void updateSelfAndChild(float deltaTime){
             if (parent)
-                transformation.modelMatrix = parent->transformation.modelMatrix * transformation.getLocalModelMatrix();
+                transformation.modelMatrix = parent->transformation.modelMatrix * transformation.getLocalModelMatrix(deltaTime);
             else
-                transformation.modelMatrix = transformation.getLocalModelMatrix();
+                transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
 
             for (auto&& child : children){
-                child->updateSelfAndChild();
+                child->updateSelfAndChild(deltaTime);
             }
         }
 
-        void draw(GLuint shaderProgram) {
+        void drawSelfAndChild(GLuint shaderProgram) {
             GLuint objectIDLoc = glGetUniformLocation(shaderProgram, "objectID");
             glUniform1i(objectIDLoc, objectID);
 
             GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]);        
 
-            mesh.draw(shaderProgram); 
+            mesh->draw(shaderProgram); 
 
             for (auto&& child : children) {
-                child->draw(shaderProgram);
+                child->drawSelfAndChild(shaderProgram);
             }
         }
 };

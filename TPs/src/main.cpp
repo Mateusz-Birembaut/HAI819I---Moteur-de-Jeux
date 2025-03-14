@@ -63,46 +63,6 @@ void checkGLError(const char* operation) {
     }
 }
 
-// Créer un grand nombre de sphères pour tester les performances
-std::vector<GameObject<Sphere>*> generatePerformanceSpheres(int count) {
-    std::vector<GameObject<Sphere>*> spheres;
-    spheres.reserve(count);
-    
-    // Une seule instance de Sphere que tous les GameObjects partageront
-    Sphere baseSphere(20, 20, 0.5f);
-    
-    // Calculer la taille de la grille 3D pour disposer les objets
-    float gridSize = std::ceil(std::cbrt(count));
-    float spacing = 3.0f;
-    
-    for (int i = 0; i < count; i++) {
-        GameObject<Sphere>* obj = new GameObject<Sphere>();
-        obj->mesh = baseSphere; // Tous partagent la même mesh
-        
-        // Positionner en grille 3D
-        int x = i % int(gridSize);
-        int y = (i / int(gridSize)) % int(gridSize);
-        int z = i / (int(gridSize) * int(gridSize));
-        
-        obj->transformation.translation = glm::vec3(
-            (x - gridSize/2) * spacing,
-            (y - gridSize/2) * spacing,
-            (z - gridSize/2) * spacing
-        );
-        
-        // Rotation initiale aléatoire
-        obj->transformation.eulerRot = glm::vec3(
-            rand() % 360,
-            rand() % 360,
-            rand() % 360
-        );
-        
-        spheres.push_back(obj);
-    }
-    
-    return spheres;
-}
-
 
 int main( void )
 {
@@ -172,29 +132,33 @@ int main( void )
     /****************************************/
 
     SceneGraph sceneGraph;
-    Sphere sphere(90,90, 1.0f, glm::vec3(0.0f,10.0f,0.0f)); 
 
-    GameObject<Sphere> sun;
+    Mesh sphereMesh;
+    Sphere::create(sphereMesh, 90,90, 1.0f);
+
+    GameObject sun;
     sun.objectID = 2;
-    sun.mesh = sphere;
+    sun.mesh = &sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
 
 
-    GameObject<Sphere> earth;
+    GameObject earth;
+    earth.mesh = &sphereMesh;
     earth.objectID = 0;
-    earth.mesh = sphere;
     earth.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     earth.transformation.scale = glm::vec3(0.5f, 0.5f, 0.5f);
+    earth.transformation.rotationSpeed = 300;
+    earth.transformation.eulerRot = glm::vec3(0.0f, 1.0f, 0.0f);
 
-    GameObject<Sphere> moon;
-    moon.mesh = sphere;
-    moon.objectID = 1;
+    GameObject moon;
+    moon.mesh = &sphereMesh;
+    moon.objectID = 1;    
     moon.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     moon.transformation.scale = glm::vec3(0.25f, 0.25f, 0.25f);
 
     earth.addChild(&moon);
     sun.addChild(&earth);
-
+ 
 
     sceneGraph.addObject(&sun);
 
@@ -221,6 +185,9 @@ int main( void )
     // For speed computation
     double lastTime = glfwGetTime();
     int nbFrames = 0;
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
     do{
 
@@ -282,13 +249,8 @@ int main( void )
         glUniform1i(textureID1, 0); 
         glUniform1i(textureID2, 1); 
 
-        //terrain.draw(programID);
-        //terrain2.draw(programID);
 
-        //sphere.draw(programID);
-
-        earth.transformation.eulerRot += deltaTime * 10 * glm::vec3(0.0f, 1.0f, 0.0f);
-        sceneGraph.updateAll();
+        sceneGraph.updateAll(deltaTime);
         sceneGraph.drawAll(programID);
 
         // Swap buffers

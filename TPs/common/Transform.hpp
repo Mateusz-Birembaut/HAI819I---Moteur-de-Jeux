@@ -9,13 +9,19 @@
 class Transform{
 
     public:
+        float rotationSpeed;
+
         glm::vec3 translation = { 0.0f, 0.0f, 0.0f };
         glm::vec3 eulerRot = { 0.0f, 0.0f, 0.0f };
         glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
 
         glm::mat4 modelMatrix = glm::mat4(1.0f);
 
-        glm::mat4 getLocalModelMatrix(){
+        glm::mat4 getLocalModelMatrix(float deltaTime){
+            if (eulerRot.y != 0) {
+                eulerRot.y += rotationSpeed * deltaTime; // Rotation autour de l'axe Y
+            }
+
             const glm::mat4 transformX = glm::rotate(glm::mat4(1.0f),
                                 glm::radians(eulerRot.x),
                                 glm::vec3(1.0f, 0.0f, 0.0f));
