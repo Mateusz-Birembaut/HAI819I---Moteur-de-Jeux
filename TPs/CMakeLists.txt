@@ -31,6 +31,8 @@ include_directories(
     external/glfw-3.1.2/include/
     external/glm-0.9.7.1/
     external/glew-1.13.0/include/
+    external/imgui/
+    external/imgui/backends/ 
     .
 )
 
@@ -38,6 +40,15 @@ set(ALL_LIBS
     ${OPENGL_LIBRARY}
     glfw
     GLEW_1130
+)
+
+set(IMGUI_SOURCES
+    external/imgui/imgui.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/backends/imgui_impl_glfw.cpp
+    external/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 add_definitions(
@@ -61,6 +72,8 @@ add_executable(TP
     common/objloader.hpp
     common/vboindexer.cpp
     common/vboindexer.hpp
+
+    ${IMGUI_SOURCES}
     
     src/Shaders/vertex_shader.glsl
     src/Shaders/fragment_shader.glsl

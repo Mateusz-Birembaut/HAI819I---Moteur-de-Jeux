@@ -8,7 +8,7 @@ class Terrain {
 
     public:
 
-        static void create(Mesh & mesh, int VertexCountX, int VertexCountZ, float sizeX, float sizeZ, float originX, float originZ) {
+        static void create(Mesh & mesh, int VertexCountX, int VertexCountZ, float sizeX, float sizeZ) {
             std::vector<Vertex> vertices;
             std::vector<unsigned short> indexes;
 
@@ -17,8 +17,8 @@ class Terrain {
                     float t_x = float(i) / float(VertexCountX - 1);
                     float t_z = float(j) / float(VertexCountZ - 1);
 
-                    float x = t_x * sizeX - (sizeX * 0.5f) + originX;
-                    float z = t_z * sizeZ - (sizeZ * 0.5f) + originZ;
+                    float x = t_x * sizeX - (sizeX * 0.5f);
+                    float z = t_z * sizeZ - (sizeZ * 0.5f);
 
                     float y = 0.0f;
 
@@ -53,7 +53,9 @@ class Terrain {
 
             mesh.setVertices(vertices);
             mesh.setIndexes(indexes);
+            mesh.createBuffers();
         }
+        
 /* 
         void handleInputs(GLFWwindow *window) {
             static bool zPressed = false;

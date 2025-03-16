@@ -1,0 +1,231 @@
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
+#include <GLFW/glfw3.h>
+
+#include "../SceneGraph.hpp"
+#include "../GameObject.hpp"
+#include "ImGuiHelper.hpp"
+#include <vector>
+#include <string>
+
+
+void initImGui(GLFWwindow* window) {
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    
+    // Activer le docking et les viewports
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Optionnel: fenêtres détachables
+    
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+    
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Style personnalisé
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.08f, 0.08f, 0.08f, 1.00f);
+    style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+    style.FrameRounding = 4.0f;
+    style.WindowRounding = 0.0f; // Style Unity avec fenêtres carrées
+    style.TabRounding = 4.0f;
+}
+
+
+
+void renderImGui(SceneGraph* sceneGraph, unsigned int textureColorbuffer, int framebufferWidth, int framebufferHeight) {
+    static GameObject* selectedObject = nullptr;
+    
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    
+    // Créer un DockSpace sur la fenêtre entière
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(viewport->Pos);
+    ImGui::SetNextWindowSize(viewport->Size);
+    ImGui::SetNextWindowViewport(viewport->ID);
+    
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    
+    // Important: vérifier le retour de Begin()
+    bool dockspace_open = ImGui::Begin("DockSpace", nullptr, window_flags);
+    ImGui::PopStyleVar(3);
+    
+    if (dockspace_open) {
+        // Menu principal
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("Fichier")) {
+                if (ImGui::MenuItem("Quitter", "Alt+F4")) { /* action */ }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        
+        // DockSpace
+        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+        
+        // La première fois, configurer le layout par défaut (style Unity)
+        static bool init_layout = true;
+        if (init_layout) {
+            init_layout = false;
+            ImGui::DockBuilderRemoveNode(dockspace_id);
+            ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+            // Créer une disposition en 3 parties: gauche, centre, droite
+            ImGuiID dock_main_id = dockspace_id;
+            ImGuiID dock_left_id, dock_center_id, dock_right_id, dock_bottom_id;
+            
+            // 1. Diviser horizontalement: gauche (hiérarchie) et reste
+            ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Left, 0.20f, &dock_left_id, &dock_main_id);
+            
+            // 2. Diviser le reste: droite (propriétés) et centre
+            ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Right, 0.4f, &dock_right_id, &dock_center_id);
+            
+            // 3. Diviser le centre: haut (Vue Scène) et bas (Console)
+            ImGui::DockBuilderSplitNode(dock_center_id, ImGuiDir_Down, 0.25f, &dock_bottom_id, &dock_center_id);
+            
+            // Assigner les fenêtres aux zones
+            ImGui::DockBuilderDockWindow("Vue Scène", dock_center_id);
+            ImGui::DockBuilderDockWindow("Hiérarchie", dock_left_id);
+            ImGui::DockBuilderDockWindow("Propriétés", dock_right_id);
+            ImGui::DockBuilderDockWindow("Console", dock_bottom_id);
+            
+            ImGui::DockBuilderFinish(dockspace_id);
+        }
+    }
+    ImGui::End(); // Fin du DockSpace
+    
+    // Utiliser le même modèle pour les autres fenêtres
+    if (ImGui::Begin("Hiérarchie")) {
+        ImGui::Text("Scene Objects");
+        ImGui::Separator();
+        
+        for (size_t i = 0; i < sceneGraph->size(); i++) {
+            GameObject* rootObj = sceneGraph->getObjectAt(i);
+            if (rootObj) {
+                // Convertir en bouton cliquable + arborescence
+                std::string objName = "Objet " + std::to_string(i + 1) + " (ID: " + std::to_string(rootObj->objectID) + ")";
+                if (ImGui::TreeNodeEx(objName.c_str(), 
+                                    ImGuiTreeNodeFlags_OpenOnArrow | 
+                                    (selectedObject == rootObj ? ImGuiTreeNodeFlags_Selected : 0)))
+                {
+                    // Capture du clic
+                    if (ImGui::IsItemClicked()) {
+                        selectedObject = rootObj;
+                    }
+                    
+                    // Afficher les enfants
+                    for (size_t j = 0; j < rootObj->children.size(); j++) {
+                        displayObjectInHierarchy(rootObj->children[j], i * 100 + j + 1, &selectedObject);
+                    }
+                    
+                    ImGui::TreePop();
+                }
+                else if (ImGui::IsItemClicked()) {
+                    selectedObject = rootObj;
+                }
+            }
+        }
+    }
+    ImGui::End();
+    
+    if (ImGui::Begin("Propriétés")) {
+        if (selectedObject != nullptr) {
+            // Afficher et modifier les propriétés de l'objet sélectionné
+            ImGui::Text("ID: %d", selectedObject->objectID);
+            
+            ImGui::Separator();
+            ImGui::Text("Transform");
+            ImGui::DragFloat3("Position", &selectedObject->transformation.translation.x, 0.1f);
+            ImGui::DragFloat3("Rotation", &selectedObject->transformation.eulerRot.x, 0.1f);
+            Checkbox3("Rotate continuously", &selectedObject->transformation.continuouslyRotate.x,&selectedObject->transformation.continuouslyRotate.y, &selectedObject->transformation.continuouslyRotate.z);
+            ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f);
+            ImGui::SliderFloat("Rotation Speed", &selectedObject->transformation.rotationSpeed, -20.0f, 20.0f);
+
+            ImGui::Separator();
+            ImGui::Text("Render");
+            bool hasTexture = (selectedObject->texture != nullptr);
+            if (hasTexture){
+                ImGui::Text("Texture: %s", selectedObject->texture->getName());
+            }
+            else {
+                // FAIRE : Ajouter un bouton pour ajouter une texture
+                ImGui::Text("No Texture");
+            }
+        }
+        else {
+            ImGui::Text("Aucun objet sélectionné");
+        }
+    }
+    ImGui::End();
+    
+    if (ImGui::Begin("Console")) {
+        // Logs, messages, etc.
+    }
+    ImGui::End();
+    
+    if (ImGui::Begin("Vue Scène")) {
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        //ImGui::InputInt("Framerate Cap", &ImGui::GetIO().Framerate, 1, 5);
+        
+        // Calculer la taille disponible
+        ImVec2 availableSize = ImGui::GetContentRegionAvail();
+        
+        // Calculer le rapport d'aspect
+        float windowAspect = availableSize.x / availableSize.y;
+        float textureAspect = (float)framebufferWidth / framebufferHeight;
+        
+        // Calculer la taille d'affichage qui maintient l'aspect ratio
+        ImVec2 imageSize;
+        if (windowAspect > textureAspect) {
+            // Fenêtre plus large que l'image
+            imageSize = ImVec2(availableSize.y * textureAspect, availableSize.y);
+        } else {
+            // Fenêtre plus haute que l'image
+            imageSize = ImVec2(availableSize.x, availableSize.x / textureAspect);
+        }
+        
+        // Centrer l'image
+        float offsetX = (availableSize.x - imageSize.x) * 0.5f;
+        float offsetY = (availableSize.y - imageSize.y) * 0.5f;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + offsetY);
+        
+        // Afficher l'image
+        ImGui::Image((ImTextureID)(intptr_t)textureColorbuffer, imageSize, ImVec2(0, 1), ImVec2(1, 0));
+        
+        // Si vous voulez interagir avec la vue 3D
+        if (ImGui::IsItemHovered()) {
+            // Traiter les interactions souris avec la vue 3D
+        }
+    }
+    ImGui::End();
+    
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
+    // Pour les fenêtres détachables (si activé)
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context);
+    }
+}
+

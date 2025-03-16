@@ -53,9 +53,22 @@ public:
     void clear() {
         rootObjects.clear();
     }
+
+    void getAllObjects(std::vector<GameObject*> & objects) {
+        for (size_t i = 0; i < rootObjects.size(); ++i) {
+            rootObjects[i]->getSelfAndChild(objects);
+        }
+    }
     
     size_t size() const {
         return rootObjects.size();
+    }
+
+    GameObject* getObjectAt(size_t index) {
+        if (index < rootObjects.size()) {
+            return rootObjects[index];
+        }
+        return nullptr;
     }
 };
 

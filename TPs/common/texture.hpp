@@ -4,7 +4,19 @@
 #define DEBUG_TEXTURE false
 
 class Texture {
+    private:
+        const char* path;
+        int width;
+        int height;
+        int nrChannels;
+        unsigned char* data;
+        bool flipVertically;
+        bool isPowerOfTwo;
+
     public:
+        GLenum format;
+        GLuint textureID;
+
         Texture(const char* path = nullptr, bool flipVertically = false): 
             path(path),
             width(0), 
@@ -97,22 +109,18 @@ class Texture {
             glGenerateMipmap(GL_TEXTURE_2D);
         }
     
+        void bind(GLenum textureUnit = GL_TEXTURE0) const {
+            glActiveTexture(textureUnit);
+            glBindTexture(GL_TEXTURE_2D, textureID);
+        }
+
         GLuint getID() const {
             return textureID;
         }
-    
-    private:
-        const char* path;
-        int width;
-        int height;
-        int nrChannels;
-        unsigned char* data;
-        bool flipVertically;
-        bool isPowerOfTwo;
 
-    public:
-        GLenum format;
-        GLuint textureID;
-    };
+        const char * getName() const {
+            return path;
+        }
+};
 
 #endif

@@ -11,6 +11,8 @@ class Transform{
     public:
         float rotationSpeed;
 
+        glm::bvec3 continuouslyRotate = { false, false, false };
+    
         glm::vec3 translation = { 0.0f, 0.0f, 0.0f };
         glm::vec3 eulerRot = { 0.0f, 0.0f, 0.0f };
         glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
@@ -18,9 +20,17 @@ class Transform{
         glm::mat4 modelMatrix = glm::mat4(1.0f);
 
         glm::mat4 getLocalModelMatrix(float deltaTime){
-            if (eulerRot.y != 0) {
-                eulerRot.y += rotationSpeed * deltaTime; // Rotation autour de l'axe Y
-            }
+            if (continuouslyRotate.x) eulerRot.x += rotationSpeed * deltaTime;
+            if (continuouslyRotate.y) eulerRot.y += rotationSpeed * deltaTime;
+            if (continuouslyRotate.z) eulerRot.z += rotationSpeed * deltaTime;
+            
+            eulerRot.x = fmodf(eulerRot.x, 360.0f);
+            eulerRot.y = fmodf(eulerRot.y, 360.0f);
+            eulerRot.z = fmodf(eulerRot.z, 360.0f);
+            
+            if (eulerRot.x > 180.0f) eulerRot.x -= 360.0f;
+            if (eulerRot.y > 180.0f) eulerRot.y -= 360.0f;
+            if (eulerRot.z > 180.0f) eulerRot.z -= 360.0f;
 
             const glm::mat4 transformX = glm::rotate(glm::mat4(1.0f),
                                 glm::radians(eulerRot.x),

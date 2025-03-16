@@ -13,15 +13,21 @@
 
 // Include GLFW
 #include <GLFW/glfw3.h>
-GLFWwindow* window;
+
 
 // Include GLM
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+// Include Imgui
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
 using namespace glm;
 
+#include <common/globals.hpp>
 #include <common/shader.hpp>
 #include <common/objloader.hpp>
 #include <common/vboindexer.hpp>
@@ -32,25 +38,61 @@ using namespace glm;
 #include <common/sphere.hpp>
 #include <common/GameObject.hpp>
 #include <common/SceneGraph.hpp>
+#include <common/UI/ImGui.hpp>
 
-//params
-int nX = 16;
-int nY = 16;
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+void resizeFramebuffer(int width, int height) {
+    if (width <= 0 || height <= 0)
+        return;
+        
+    framebufferWidth = static_cast<int>(width * renderScale);
+    framebufferHeight = static_cast<int>(height * renderScale);
+    
+    // reconfigure texture
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    
+    // reconfigure renderbuffer
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebufferWidth, framebufferHeight);
+    
+    // check if framebuffer is complete
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete after resize!" << std::endl;
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
-// camera
-Camera camera(glm::vec3(0.0f, 1.0f,  2.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f,  0.0f), 0.0f, 2.5f);
+void setupFramebuffer() {
+    // Génération des objets OpenGL
+    glGenFramebuffers(1, &framebuffer);
+    glGenTextures(1, &textureColorbuffer);
+    glGenRenderbuffers(1, &rbo);
+    
+    // Configuration du framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    
+    // Attacher texture couleur
+    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+    
+    // Renderbuffer pour profondeur et stencil
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebufferWidth, framebufferHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+    
+    // Vérification
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
 
-// timing
-float deltaTime = 0.0f;	// time between current frame and last frame
-float lastFrame = 0.0f;
-
-//rotation
-float angle = 0.;
-float zoom = 1.;
 
 void processInput(GLFWwindow *window);
 
@@ -64,8 +106,7 @@ void checkGLError(const char* operation) {
 }
 
 
-int main( void )
-{
+int main(void) {
     // Initialise GLFW
     if( !glfwInit() )
     {
@@ -80,15 +121,27 @@ int main( void )
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Open a window and create its OpenGL context
-    window = glfwCreateWindow( 1024, 768, "TP Moteur de jeux - GLFW", NULL, NULL);
+    // Créer la fenêtre avec les dimensions initiales
+    window = glfwCreateWindow(windowWidth, windowHeight, "TP Moteur de jeux - GLFW", NULL, NULL);
+    // ... vérifications ...
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
         getchar();
         glfwTerminate();
         return -1;
     }
+    // Centrer la fenêtre sur l'écran
+    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+    int monitorX = mode->width;
+    int monitorY = mode->height;
+    glfwSetWindowPos(window, (monitorX - windowWidth) / 2, (monitorY - windowHeight) / 2);
+
+
     glfwMakeContextCurrent(window);
+
+    // Définir la fonction de callback pour le redimensionnement
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // Initialize GLEW
     glewExperimental = true; // Needed for core profile
@@ -108,9 +161,6 @@ int main( void )
     glfwPollEvents();
     glfwSetCursorPos(window, 1024/2, 768/2);
 
-    // Dark blue background
-    glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
-
     // Enable depth test
     glEnable(GL_DEPTH_TEST);
     // Accept fragment if it closer to the camera than the former one
@@ -126,52 +176,57 @@ int main( void )
     // Create and compile our GLSL program from the shaders
     GLuint programID = LoadShaders( "../src/Shaders/vertex_shader.glsl", "../src/Shaders/fragment_shader.glsl" );
 
+    initImGui(window);
+
     /*****************TODO***********************/
     // Get a handle for our "Model View Projection" matrices uniforms
 
     /****************************************/
+
+    // Create and load the textures
+    Texture earthTexture("../src/Textures/earthTexture.jpg", true);
+    earthTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+    
+    Texture moonTexture("../src/Textures/moonTexture.jpg", false);
+    moonTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
     SceneGraph sceneGraph;
 
     Mesh sphereMesh;
     Sphere::create(sphereMesh, 90,90, 1.0f);
 
+    Mesh terrainMesh;
+    Terrain::create(terrainMesh, 120,120, 1.0f, 1.0f);
+
     GameObject sun;
-    sun.objectID = 2;
     sun.mesh = &sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
 
-
     GameObject earth;
     earth.mesh = &sphereMesh;
-    earth.objectID = 0;
+    earth.texture = &earthTexture;
     earth.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     earth.transformation.scale = glm::vec3(0.5f, 0.5f, 0.5f);
-    earth.transformation.rotationSpeed = 300;
-    earth.transformation.eulerRot = glm::vec3(0.0f, 1.0f, 0.0f);
+    earth.transformation.rotationSpeed = 10;
+    earth.transformation.continuouslyRotate = glm::bvec3(false, true, false);
 
     GameObject moon;
-    moon.mesh = &sphereMesh;
-    moon.objectID = 1;    
+    moon.mesh = &sphereMesh; 
+    moon.texture = &moonTexture;
     moon.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     moon.transformation.scale = glm::vec3(0.25f, 0.25f, 0.25f);
+
+    GameObject terrain;
+    terrain.mesh = &terrainMesh;
+    terrain.texture = &earthTexture;
+    terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
+    terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
 
     earth.addChild(&moon);
     sun.addChild(&earth);
  
-
+    sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);
-
-    //int sphereCount = 1000;
-    //std::vector<GameObject<Sphere>*> testSpheres = generatePerformanceSpheres(sphereCount);
-
-    // Create and load the textures
-    Texture earthTexture("../src/Textures/earthTexture.jpg", true);
-    earthTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-
-    Texture moonTexture("../src/Textures/moonTexture.jpg", false);
-    moonTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-
 
     GLuint vertexbuffer;
     GLuint elementbuffer;
@@ -186,11 +241,16 @@ int main( void )
     double lastTime = glfwGetTime();
     int nbFrames = 0;
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    // Initialiser les dimensions du framebuffer
+    framebufferWidth = static_cast<int>(windowWidth * renderScale);
+    framebufferHeight = static_cast<int>(windowHeight * renderScale);
+    
+    setupFramebuffer();
 
 
     do{
-
         // Measure speed
         // per-frame time logic
         // --------------------
@@ -202,56 +262,22 @@ int main( void )
         // -----
         processInput(window);
 
-
-        // Clear the screen
+        // render to framebuffer
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Use our shader
         glUseProgram(programID);
 
-
-        /*****************TODO***********************/
-        // Model matrix : an identity matrix (model will be at the origin) then change
-        
-        glm::mat4 modelMatrix = glm::mat4(1.0);
-        // View matrix : camera/view transformation lookat() utiliser camera_position camera_target camera_up
-        glm::mat4 viewMatrix = glm::lookAt(camera.getPosition(), camera.getTarget() + camera.getPosition(), camera.getUp());
-        // Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-        glm::mat4 projectionMatrix = glm::perspective(45.0f, 4.f / 3.f, 0.1f, 100.0f);
-
-        // Send our transformation to the currently bound shader,
-        // in the "Model View Projection" to the shader uniforms
-
-        GLint loc_transformations = glGetUniformLocation(programID, "u_model");
-        GLint loc_ViewMatrix = glGetUniformLocation(programID, "u_view");
-        GLint lov_ProjectionMatrix = glGetUniformLocation(programID, "u_projection");
-
-        glUniformMatrix4fv(loc_ViewMatrix, 1, GL_FALSE, &viewMatrix[0][0]);
-        glUniformMatrix4fv(lov_ProjectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]);
-        glUniformMatrix4fv(loc_transformations, 1, GL_FALSE, &modelMatrix[0][0]);
-
-        /****************************************/
-
-
-
-        // activer texture
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, earthTexture.getID());
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, moonTexture.getID());
-
-
-        // Obtenir l'emplacement de l'uniform `u_texture`
-        GLuint textureID1 = glGetUniformLocation(programID, "u_earthTexture");
-        GLuint textureID2 = glGetUniformLocation(programID, "u_moonTexture");
-
-        glUniform1i(textureID1, 0); 
-        glUniform1i(textureID2, 1); 
-
+        // Compute the MVP matrix from keyboard and mouse input
+        camera.sendMatricesToShader(programID, windowWidth, windowHeight);
 
         sceneGraph.updateAll(deltaTime);
         sceneGraph.drawAll(programID);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        renderImGui(&sceneGraph, textureColorbuffer, framebufferWidth, framebufferHeight);
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -287,10 +313,15 @@ void processInput(GLFWwindow *window)
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    // Mettre à jour les dimensions de la fenêtre
+    windowWidth = width;
+    windowHeight = height;
+    
+    // Ajuster le viewport OpenGL
     glViewport(0, 0, width, height);
+    
+    // Redimensionner le framebuffer
+    resizeFramebuffer(width, height);
 }
 

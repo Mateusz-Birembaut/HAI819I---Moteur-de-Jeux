@@ -21,7 +21,6 @@ uniform mat4 u_projection;
 
 
 // Values that stay constant for the whole mesh.
-
 void main(){
         mat4 mvp = u_projection * u_view * u_model;
         gl_Position = mvp * vec4(vertices_position_modelspace, 1.0);

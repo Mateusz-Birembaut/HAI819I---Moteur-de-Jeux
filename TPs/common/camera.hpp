@@ -15,6 +15,8 @@ class Camera
 {
 private:
 
+    float FOV = 45.0f;
+
     // general
     glm::vec3 position;
     glm::vec3 target;
@@ -199,6 +201,26 @@ public:
             }
 
         }
+    }
+
+    void sendMatricesToShader(GLuint programID, int windowWidth, int windowHeight){
+        // Model matrix : an identity matrix (model will be at the origin) then change
+        glm::mat4 modelMatrix = glm::mat4(1.0);
+        // View matrix : camera/view transformation lookat() utiliser camera_position camera_target camera_up
+        glm::mat4 viewMatrix = glm::lookAt(position, target + position, up);
+        // Projection matrix : 45 Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+        glm::mat4 projectionMatrix = glm::perspective(45.0f, (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
+
+        // Send our transformation to the currently bound shader,
+        // in the "Model View Projection" to the shader uniforms
+        GLint loc_transformations = glGetUniformLocation(programID, "u_model");
+        GLint loc_ViewMatrix = glGetUniformLocation(programID, "u_view");
+        GLint lov_ProjectionMatrix = glGetUniformLocation(programID, "u_projection");
+
+        glUniformMatrix4fv(loc_ViewMatrix, 1, GL_FALSE, &viewMatrix[0][0]);
+        glUniformMatrix4fv(lov_ProjectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]);
+        glUniformMatrix4fv(loc_transformations, 1, GL_FALSE, &modelMatrix[0][0]);
+    
     }
 
 };

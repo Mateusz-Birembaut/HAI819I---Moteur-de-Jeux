@@ -11,7 +11,7 @@
 class GameObject{
 
     public:
-        GameObject* parent = nullptr;
+        GameObject * parent = nullptr;
         std::vector<GameObject*> children;
 
         Transform transformation; 
@@ -44,11 +44,19 @@ class GameObject{
         }
 
         void drawSelfAndChild(GLuint shaderProgram) {
-            GLuint objectIDLoc = glGetUniformLocation(shaderProgram, "objectID");
-            glUniform1i(objectIDLoc, objectID);
-
             GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]);        
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
+
+            GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
+        
+            if (texture != nullptr) {
+                glUniform1i(hasTextureLoc, 1);
+                texture->bind(GL_TEXTURE0);  
+                GLint textureLoc = glGetUniformLocation(shaderProgram, "u_texture");
+                glUniform1i(textureLoc, 0);  
+            }else {
+                glUniform1i(hasTextureLoc, 0);
+            }
 
             mesh->draw(shaderProgram); 
 
@@ -56,6 +64,14 @@ class GameObject{
                 child->drawSelfAndChild(shaderProgram);
             }
         }
+
+        void getSelfAndChild(std::vector<GameObject*>& objects) {
+            objects.push_back(this);
+            for (auto&& child : children) {
+                child->getSelfAndChild(objects);
+            }
+        }
+
 };
 
 
