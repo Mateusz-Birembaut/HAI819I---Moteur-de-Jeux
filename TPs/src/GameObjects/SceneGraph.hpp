@@ -1,7 +1,9 @@
 #ifndef SCENE_GRAPH_HPP
 #define SCENE_GRAPH_HPP
 
+
 #include "GameObject.hpp"
+
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -10,13 +12,16 @@
 class SceneGraph {
     
 private:
+
+    SceneGraph() {}
+
     std::vector<GameObject*> rootObjects;
     
 public:
-    SceneGraph() {}
-    
-    ~SceneGraph() {
-        clear();
+
+    static SceneGraph& getInstance() {
+        static SceneGraph instance;
+        return instance;
     }
     
     void addObject(GameObject * object) {
@@ -24,17 +29,6 @@ public:
         
         if (object->parent == nullptr) {
             rootObjects.push_back(object);
-        }
-    }
-    
-    void removeObject(GameObject * object) {
-        if (!object) return;
-        
-        for (size_t i = 0; i < rootObjects.size(); ++i) {
-            if (rootObjects[i] == object) {
-                rootObjects.erase(rootObjects.begin() + i);
-                break;
-            }
         }
     }
     
@@ -70,6 +64,8 @@ public:
         }
         return nullptr;
     }
+
+
 };
 
 #endif

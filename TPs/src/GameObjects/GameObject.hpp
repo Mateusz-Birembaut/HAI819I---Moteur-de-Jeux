@@ -1,9 +1,13 @@
 #ifndef GAME_OBJECT_HPP
 #define GAME_OBJECT_HPP
 
-#include "Mesh.hpp"
-#include "texture.hpp"
-#include "Transform.hpp"
+
+#include "Components/Transform.hpp"
+#include "Components/Mesh.hpp"
+#include "Components/Texture.hpp"
+#include "Components/Physics/RigidBody.hpp"
+#include "Components/Physics/Collider.hpp"
+#include "../Ressources/IdGenerator.hpp"
 #include <glm/fwd.hpp>
 #include <list>
 #include <memory>
@@ -11,19 +15,24 @@
 class GameObject{
 
     public:
-        GameObject * parent = nullptr;
-        std::vector<GameObject*> children;
+
+        std::string gameObjectId;
 
         Transform transformation; 
 
-        Texture * texture;
+        GameObject* parent = nullptr;
+        std::vector<GameObject*> children;
 
-        Mesh * mesh;
-    
-        int objectID = 0;
+        Texture* texture;
 
-        GameObject() : parent(nullptr), texture(nullptr), mesh(nullptr){}
+        Mesh* mesh;
 
+        RigidBody* rigidBody;
+
+        Collider* collider;
+
+
+        GameObject() : gameObjectId(generateId()), parent(nullptr), texture(nullptr), mesh(nullptr), transformation(), collider(nullptr), rigidBody(nullptr){}
 
         void addChild(GameObject * child) {
             if (child) {
@@ -44,6 +53,13 @@ class GameObject{
         }
 
         void drawSelfAndChild(GLuint shaderProgram) {
+            if (mesh == nullptr) {
+                for (auto&& child : children) {
+                    child->drawSelfAndChild(shaderProgram);
+                }
+                return;
+            }
+            
             GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
 
@@ -59,6 +75,9 @@ class GameObject{
             }
 
             mesh->draw(shaderProgram); 
+            if (collider != nullptr) {
+                collider->drawCollider(shaderProgram, transformation.modelMatrix);
+            }
 
             for (auto&& child : children) {
                 child->drawSelfAndChild(shaderProgram);
@@ -71,6 +90,16 @@ class GameObject{
                 child->getSelfAndChild(objects);
             }
         }
+
+        void removeChild(GameObject * child) {
+            for (size_t i = 0; i < children.size(); ++i) {
+                if (children[i] == child) {
+                    children.erase(children.begin() + i);
+                    break;
+                }
+            }
+        }
+
 
 };
 

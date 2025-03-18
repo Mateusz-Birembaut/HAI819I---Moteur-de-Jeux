@@ -59,24 +59,22 @@ add_definitions(
     -D_CRT_SECURE_NO_WARNINGS
 )
 
+set(CMAKE_BUILD_TYPE Debug)
+add_compile_options(-g)
+
 # TP1
 add_executable(TP
     src/main.cpp
     common/shader.cpp
     common/shader.hpp
-    common/controls.cpp
-    common/controls.hpp
     common/texture.cpp
-    common/texture.hpp
     common/objloader.cpp
     common/objloader.hpp
-    common/vboindexer.cpp
-    common/vboindexer.hpp
 
     ${IMGUI_SOURCES}
     
-    src/Shaders/vertex_shader.glsl
-    src/Shaders/fragment_shader.glsl
+    src/Assets/Shaders/vertex_shader.glsl
+    src/Assets/Shaders/fragment_shader.glsl
 )
 target_link_libraries(TP
     ${ALL_LIBS}

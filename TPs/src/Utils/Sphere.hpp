@@ -1,10 +1,11 @@
 #ifndef SPHERE_HPP
 #define SPHERE_HPP
 
-#include "structs.hpp"
-#include "Mesh.hpp"
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
+
+#include "../Ressources/Structs.hpp"
+#include "../GameObjects/Components/Mesh.hpp"
 
 class Sphere {
 

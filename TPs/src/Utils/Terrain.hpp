@@ -1,8 +1,8 @@
 #ifndef TERRAIN_HPP
 #define TERRAIN_HPP
 
-#include "structs.hpp"
-#include "Mesh.hpp"
+#include "../Ressources/Structs.hpp"
+#include "../GameObjects/Components/Mesh.hpp"
 
 class Terrain {
 

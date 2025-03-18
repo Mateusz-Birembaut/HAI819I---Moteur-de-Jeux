@@ -49,7 +49,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::u8vec2 A = glm::linearRand(glm::u8vec2(Min), glm::u8vec2(Max));
-				AMin = glm::min(AMin, A);
+				AMin = glm::localMin(AMin, A);
 				AMax = glm::max(AMax, A);
 
 				if(!glm::all(glm::lessThanEqual(A, glm::u8vec2(Max))))
@@ -70,7 +70,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::u16vec2 B = glm::linearRand(glm::u16vec2(Min), glm::u16vec2(Max));
-				BMin = glm::min(BMin, B);
+				BMin = glm::localMin(BMin, B);
 				BMax = glm::max(BMax, B);
 
 				if(!glm::all(glm::lessThanEqual(B, glm::u16vec2(Max))))
@@ -91,7 +91,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::u32vec2 C = glm::linearRand(glm::u32vec2(Min), glm::u32vec2(Max));
-				CMin = glm::min(CMin, C);
+				CMin = glm::localMin(CMin, C);
 				CMax = glm::max(CMax, C);
 
 				if(!glm::all(glm::lessThanEqual(C, glm::u32vec2(Max))))
@@ -112,7 +112,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::u64vec2 D = glm::linearRand(glm::u64vec2(Min), glm::u64vec2(Max));
-				DMin = glm::min(DMin, D);
+				DMin = glm::localMin(DMin, D);
 				DMax = glm::max(DMax, D);
 
 				if(!glm::all(glm::lessThanEqual(D, glm::u64vec2(Max))))
@@ -135,7 +135,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::i8vec2 A = glm::linearRand(glm::i8vec2(Min), glm::i8vec2(Max));
-				AMin = glm::min(AMin, A);
+				AMin = glm::localMin(AMin, A);
 				AMax = glm::max(AMax, A);
 
 				if(!glm::all(glm::lessThanEqual(A, glm::i8vec2(Max))))
@@ -156,7 +156,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::i16vec2 B = glm::linearRand(glm::i16vec2(Min), glm::i16vec2(Max));
-				BMin = glm::min(BMin, B);
+				BMin = glm::localMin(BMin, B);
 				BMax = glm::max(BMax, B);
 
 				if(!glm::all(glm::lessThanEqual(B, glm::i16vec2(Max))))
@@ -177,7 +177,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::i32vec2 C = glm::linearRand(glm::i32vec2(Min), glm::i32vec2(Max));
-				CMin = glm::min(CMin, C);
+				CMin = glm::localMin(CMin, C);
 				CMax = glm::max(CMax, C);
 
 				if(!glm::all(glm::lessThanEqual(C, glm::i32vec2(Max))))
@@ -198,7 +198,7 @@ int test_linearRand()
 			for(std::size_t i = 0; i < 100000; ++i)
 			{
 				glm::i64vec2 D = glm::linearRand(glm::i64vec2(Min), glm::i64vec2(Max));
-				DMin = glm::min(DMin, D);
+				DMin = glm::localMin(DMin, D);
 				DMax = glm::max(DMax, D);
 
 				if(!glm::all(glm::lessThanEqual(D, glm::i64vec2(Max))))

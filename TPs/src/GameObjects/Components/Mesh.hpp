@@ -1,7 +1,8 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
-#include "structs.hpp"
+#include "../../Ressources/Structs.hpp"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -19,6 +20,10 @@ class Mesh {
         Mesh(){}
 
         ~Mesh() {
+        }
+
+        std::vector<Vertex> getVertices(){
+            return vertices;
         }
 
         void setVertices(std::vector<Vertex> _vertices){

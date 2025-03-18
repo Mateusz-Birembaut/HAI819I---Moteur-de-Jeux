@@ -1,6 +1,7 @@
 #ifndef TEXTURE_HPP
 #define TEXTURE_HPP
 
+
 #define DEBUG_TEXTURE false
 
 class Texture {
@@ -27,7 +28,7 @@ class Texture {
             format(GL_RGB),
             textureID(0)
         {}
-    
+
         ~Texture() {
             if (data) {
                 stbi_image_free(data);

@@ -5,9 +5,12 @@
 
 #include <GLFW/glfw3.h>
 
-#include "../SceneGraph.hpp"
-#include "../GameObject.hpp"
+#include "../GameObjects/SceneGraph.hpp"
+#include "../GameObjects/GameObject.hpp"
+
 #include "ImGuiHelper.hpp"
+#include "ImGuiConsole.hpp"
+
 #include <vector>
 #include <string>
 
@@ -40,7 +43,7 @@ void initImGui(GLFWwindow* window) {
 
 
 
-void renderImGui(SceneGraph* sceneGraph, unsigned int textureColorbuffer, int framebufferWidth, int framebufferHeight) {
+void renderImGui() {
     static GameObject* selectedObject = nullptr;
     
     ImGui_ImplOpenGL3_NewFrame();
@@ -113,14 +116,19 @@ void renderImGui(SceneGraph* sceneGraph, unsigned int textureColorbuffer, int fr
     
     // Utiliser le même modèle pour les autres fenêtres
     if (ImGui::Begin("Hiérarchie")) {
+        SceneGraph& sceneGraph = SceneGraph::getInstance();
         ImGui::Text("Scene Objects");
+        ImGui::SameLine(); 
+        if (ImGui::Button(" + ")){
+            SceneGraph::getInstance().addObject(new GameObject());
+        };
         ImGui::Separator();
-        
-        for (size_t i = 0; i < sceneGraph->size(); i++) {
-            GameObject* rootObj = sceneGraph->getObjectAt(i);
+
+        for (size_t i = 0; i < sceneGraph.size(); i++) {
+            GameObject* rootObj = sceneGraph.getObjectAt(i);
             if (rootObj) {
                 // Convertir en bouton cliquable + arborescence
-                std::string objName = "Objet " + std::to_string(i + 1) + " (ID: " + std::to_string(rootObj->objectID) + ")";
+                std::string objName = "Objet " + rootObj->gameObjectId;
                 if (ImGui::TreeNodeEx(objName.c_str(), 
                                     ImGuiTreeNodeFlags_OpenOnArrow | 
                                     (selectedObject == rootObj ? ImGuiTreeNodeFlags_Selected : 0)))
@@ -132,7 +140,7 @@ void renderImGui(SceneGraph* sceneGraph, unsigned int textureColorbuffer, int fr
                     
                     // Afficher les enfants
                     for (size_t j = 0; j < rootObj->children.size(); j++) {
-                        displayObjectInHierarchy(rootObj->children[j], i * 100 + j + 1, &selectedObject);
+                        displayObjectInHierarchy(rootObj->children[j], &selectedObject);
                     }
                     
                     ImGui::TreePop();
@@ -147,27 +155,36 @@ void renderImGui(SceneGraph* sceneGraph, unsigned int textureColorbuffer, int fr
     
     if (ImGui::Begin("Propriétés")) {
         if (selectedObject != nullptr) {
-            // Afficher et modifier les propriétés de l'objet sélectionné
-            ImGui::Text("ID: %d", selectedObject->objectID);
-            
+            std::string gameObjectId = selectedObject->gameObjectId;
+
+            ImGui::Text("Object %s Properties", gameObjectId.c_str());
+            ImGui::SameLine();
+            if(ImGui::Button("Change ID")) {
+                Console::getInstance().addLog("TODO : ajouter modification de l'id de l'objet");
+            };
+            if(ImGui::Button("Delete")) {
+                Console::getInstance().addLog("TODO : suppression object avec confirmation");
+            };
             ImGui::Separator();
-            ImGui::Text("Transform");
-            ImGui::DragFloat3("Position", &selectedObject->transformation.translation.x, 0.1f);
-            ImGui::DragFloat3("Rotation", &selectedObject->transformation.eulerRot.x, 0.1f);
-            Checkbox3("Rotate continuously", &selectedObject->transformation.continuouslyRotate.x,&selectedObject->transformation.continuouslyRotate.y, &selectedObject->transformation.continuouslyRotate.z);
-            ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f);
-            ImGui::SliderFloat("Rotation Speed", &selectedObject->transformation.rotationSpeed, -20.0f, 20.0f);
+
+            gameObjectTransformMenu(selectedObject);
 
             ImGui::Separator();
             ImGui::Text("Render");
-            bool hasTexture = (selectedObject->texture != nullptr);
-            if (hasTexture){
-                ImGui::Text("Texture: %s", selectedObject->texture->getName());
-            }
-            else {
-                // FAIRE : Ajouter un bouton pour ajouter une texture
-                ImGui::Text("No Texture");
-            }
+
+            ImGui::Separator();
+
+            gameObjectMeshMenu(selectedObject);
+
+            ImGui::Separator();
+
+            gameObjectTextureMenu(selectedObject);
+
+
+            ImGui::Separator();
+
+            gameObjectColliderMenu(selectedObject);
+
         }
         else {
             ImGui::Text("Aucun objet sélectionné");
@@ -176,44 +193,56 @@ void renderImGui(SceneGraph* sceneGraph, unsigned int textureColorbuffer, int fr
     ImGui::End();
     
     if (ImGui::Begin("Console")) {
-        // Logs, messages, etc.
+        Console::getInstance().displayLogs();
     }
     ImGui::End();
     
     if (ImGui::Begin("Vue Scène")) {
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        //ImGui::InputInt("Framerate Cap", &ImGui::GetIO().Framerate, 1, 5);
+        ImGui::SameLine();
+
+        SceneRenderer & sceneRenderer = SceneRenderer::getInstance();
+
+        if (sceneRenderer.isInitialized()) {
+            if (sceneRenderer.getPauseAnimations() ? ImGui::Button("Animation Paused") : ImGui::Button("Animation Running")){
+                sceneRenderer.setPauseAnimations(!pauseAnimations);
+            }
+            //ImGui::InputInt("Framerate Cap", &ImGui::GetIO().Framerate, 1, 5);
+            
+            // Calculer la taille disponible
+            ImVec2 availableSize = ImGui::GetContentRegionAvail();
+            
+            // Calculer le rapport d'aspect
+            float windowAspect = availableSize.x / availableSize.y;
+            float textureAspect = (float)sceneRenderer.getframebufferWidth() / sceneRenderer.getframebufferHeight();
+            
+            // Calculer la taille d'affichage qui maintient l'aspect ratio
+            ImVec2 imageSize;
+            if (windowAspect > textureAspect) {
+                // Fenêtre plus large que l'image
+                imageSize = ImVec2(availableSize.y * textureAspect, availableSize.y);
+            } else {
+                // Fenêtre plus haute que l'image
+                imageSize = ImVec2(availableSize.x, availableSize.x / textureAspect);
+            }
+            
+            // Centrer l'image
+            float offsetX = (availableSize.x - imageSize.x) * 0.5f;
+            float offsetY = (availableSize.y - imageSize.y) * 0.5f;
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + offsetY);
         
-        // Calculer la taille disponible
-        ImVec2 availableSize = ImGui::GetContentRegionAvail();
-        
-        // Calculer le rapport d'aspect
-        float windowAspect = availableSize.x / availableSize.y;
-        float textureAspect = (float)framebufferWidth / framebufferHeight;
-        
-        // Calculer la taille d'affichage qui maintient l'aspect ratio
-        ImVec2 imageSize;
-        if (windowAspect > textureAspect) {
-            // Fenêtre plus large que l'image
-            imageSize = ImVec2(availableSize.y * textureAspect, availableSize.y);
-        } else {
-            // Fenêtre plus haute que l'image
-            imageSize = ImVec2(availableSize.x, availableSize.x / textureAspect);
+
+            // Afficher l'image
+            ImGui::Image((ImTextureID)(intptr_t)sceneRenderer.getTextureColorbuffer(), imageSize, ImVec2(0, 1), ImVec2(1, 0));
+            
+            // Si vous voulez interagir avec la vue 3D
+            if (ImGui::IsItemHovered()) {
+                // Traiter les interactions souris avec la vue 3D
+            }
         }
         
-        // Centrer l'image
-        float offsetX = (availableSize.x - imageSize.x) * 0.5f;
-        float offsetY = (availableSize.y - imageSize.y) * 0.5f;
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + offsetY);
-        
-        // Afficher l'image
-        ImGui::Image((ImTextureID)(intptr_t)textureColorbuffer, imageSize, ImVec2(0, 1), ImVec2(1, 0));
-        
-        // Si vous voulez interagir avec la vue 3D
-        if (ImGui::IsItemHovered()) {
-            // Traiter les interactions souris avec la vue 3D
-        }
+
     }
     ImGui::End();
     

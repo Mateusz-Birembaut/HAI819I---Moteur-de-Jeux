@@ -171,7 +171,7 @@ namespace glm
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/min.xml">GLSL min man page</a>
 	/// @see <a href="http://www.opengl.org/registry/doc/GLSLangSpec.4.20.8.pdf">GLSL 4.20.8 specification, section 8.3 Common Functions</a>
 	template <typename genType>
-	GLM_FUNC_DECL genType min(genType x, genType y);
+	GLM_FUNC_DECL genType localMin(genType x, genType y);
 
 	template <typename T, precision P, template <typename, precision> class vecType>
 	GLM_FUNC_DECL vecType<T, P> min(vecType<T, P> const & x, T y);

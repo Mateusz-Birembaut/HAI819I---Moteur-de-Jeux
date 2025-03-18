@@ -6,7 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#include "common/stb_image.cpp"
+
 
 // Include GLEW
 #include <GL/glew.h>
@@ -27,71 +27,32 @@
 
 using namespace glm;
 
-#include <common/globals.hpp>
+#include <common/stb_image.cpp>
 #include <common/shader.hpp>
 #include <common/objloader.hpp>
-#include <common/vboindexer.hpp>
-#include <common/terrain.hpp>
-#include <common/texture.hpp>
-#include <common/camera.hpp>
-#include <common/Mesh.hpp>
-#include <common/sphere.hpp>
-#include <common/GameObject.hpp>
-#include <common/SceneGraph.hpp>
-#include <common/UI/ImGui.hpp>
+
+#include "Ressources/Globals.hpp"
+#include "Ressources/RessourceManager.hpp"
+
+#include "GameObjects/GameObject.hpp"
+#include "GameObjects/SceneGraph.hpp"
+#include "GameObjects/Components/Mesh.hpp"
+#include "GameObjects/Components/Texture.hpp"
+
+#include "Utils/Terrain.hpp"
+#include "Utils/Sphere.hpp"
+
+#include "Rendering/Camera.hpp"
+#include "Rendering/SceneRenderer.hpp"
+
+#include "UI/ImGui.hpp"
+
+
+
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-void resizeFramebuffer(int width, int height) {
-    if (width <= 0 || height <= 0)
-        return;
-        
-    framebufferWidth = static_cast<int>(width * renderScale);
-    framebufferHeight = static_cast<int>(height * renderScale);
-    
-    // reconfigure texture
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    
-    // reconfigure renderbuffer
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebufferWidth, framebufferHeight);
-    
-    // check if framebuffer is complete
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete after resize!" << std::endl;
-    
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void setupFramebuffer() {
-    // Génération des objets OpenGL
-    glGenFramebuffers(1, &framebuffer);
-    glGenTextures(1, &textureColorbuffer);
-    glGenRenderbuffers(1, &rbo);
-    
-    // Configuration du framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    
-    // Attacher texture couleur
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, framebufferWidth, framebufferHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-    
-    // Renderbuffer pour profondeur et stencil
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebufferWidth, framebufferHeight);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-    
-    // Vérification
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-    
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
 
 
 void processInput(GLFWwindow *window);
@@ -137,7 +98,6 @@ int main(void) {
     int monitorY = mode->height;
     glfwSetWindowPos(window, (monitorX - windowWidth) / 2, (monitorY - windowHeight) / 2);
 
-
     glfwMakeContextCurrent(window);
 
     // Définir la fonction de callback pour le redimensionnement
@@ -161,21 +121,6 @@ int main(void) {
     glfwPollEvents();
     glfwSetCursorPos(window, 1024/2, 768/2);
 
-    // Enable depth test
-    glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LESS);
-
-    // Cull triangles which normal is not towards the camera
-    //glEnable(GL_CULL_FACE);
-
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
-
-    // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "../src/Shaders/vertex_shader.glsl", "../src/Shaders/fragment_shader.glsl" );
-
     initImGui(window);
 
     /*****************TODO***********************/
@@ -184,71 +129,68 @@ int main(void) {
     /****************************************/
 
     // Create and load the textures
-    Texture earthTexture("../src/Textures/earthTexture.jpg", true);
-    earthTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-    
-    Texture moonTexture("../src/Textures/moonTexture.jpg", false);
-    moonTexture.loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
-    SceneGraph sceneGraph;
+    // TODO ajouter message d'erreur si la texture n'est pas chargée
 
-    Mesh sphereMesh;
-    Sphere::create(sphereMesh, 90,90, 1.0f);
+    RessourceManager& ressourceManager = RessourceManager::getInstance();
 
-    Mesh terrainMesh;
-    Terrain::create(terrainMesh, 120,120, 1.0f, 1.0f);
+    Texture* earthTexture = ressourceManager.addTexture("earth" ,"../src/Assets/Textures/damier.jpg", true);
+    Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", true);
+
+    Mesh* sphereMesh = ressourceManager.addMesh("sphere");
+    Sphere::create(*sphereMesh, 90,90, 1.0f);
+
+    Mesh* terrainMesh = ressourceManager.addMesh("terrain");
+    Terrain::create(*terrainMesh, 120,120, 1.0f, 1.0f);
 
     GameObject sun;
-    sun.mesh = &sphereMesh;
+    sun.mesh = sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
 
+
     GameObject earth;
-    earth.mesh = &sphereMesh;
-    earth.texture = &earthTexture;
+    earth.mesh = sphereMesh;
+    earth.texture = earthTexture;
     earth.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     earth.transformation.scale = glm::vec3(0.5f, 0.5f, 0.5f);
     earth.transformation.rotationSpeed = 10;
     earth.transformation.continuouslyRotate = glm::bvec3(false, true, false);
 
+
     GameObject moon;
-    moon.mesh = &sphereMesh; 
-    moon.texture = &moonTexture;
+    moon.mesh = sphereMesh; 
+    moon.texture = moonTexture;
     moon.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     moon.transformation.scale = glm::vec3(0.25f, 0.25f, 0.25f);
 
     GameObject terrain;
-    terrain.mesh = &terrainMesh;
-    terrain.texture = &earthTexture;
+    terrain.mesh = terrainMesh;
+    terrain.texture = earthTexture;
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
     terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
 
     earth.addChild(&moon);
     sun.addChild(&earth);
+
+    SceneGraph& sceneGraph = SceneGraph::getInstance();
  
     sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);
 
-    GLuint vertexbuffer;
-    GLuint elementbuffer;
-    glGenBuffers(1, &vertexbuffer);
-    glGenBuffers(1, &elementbuffer);
-
-    // Get a handle for our "LightPosition" uniform
-    glUseProgram(programID);
-    GLuint LightID = glGetUniformLocation(programID, "LightPosition_worldspace");
 
     // For speed computation
-    double lastTime = glfwGetTime();
-    int nbFrames = 0;
+    //double lastTime = glfwGetTime();
+    //int nbFrames = 0;
 
     //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // Initialiser les dimensions du framebuffer
-    framebufferWidth = static_cast<int>(windowWidth * renderScale);
-    framebufferHeight = static_cast<int>(windowHeight * renderScale);
-    
-    setupFramebuffer();
+    // Initialiser les dimensions du framebuffer    
+    SceneRenderer& sceneRenderer = SceneRenderer::getInstance();
+    sceneRenderer.setupFramebuffer(windowWidth, windowHeight, renderScale);
 
+    Console& console = Console::getInstance();
+
+    std::cout << "Debut de la boucle principale" << std::endl;
 
     do{
         // Measure speed
@@ -262,22 +204,14 @@ int main(void) {
         // -----
         processInput(window);
 
-        // render to framebuffer
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-        glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (sceneRenderer.isInitialized()) {
+            if(!sceneRenderer.render(deltaTime)){
+                console.addLog("Scene Renderer error");
+            }
 
-        // Use our shader
-        glUseProgram(programID);
-
-        // Compute the MVP matrix from keyboard and mouse input
-        camera.sendMatricesToShader(programID, windowWidth, windowHeight);
-
-        sceneGraph.updateAll(deltaTime);
-        sceneGraph.drawAll(programID);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        renderImGui(&sceneGraph, textureColorbuffer, framebufferWidth, framebufferHeight);
+        }
+        
+        renderImGui();
 
         // Swap buffers
         glfwSwapBuffers(window);
@@ -288,10 +222,7 @@ int main(void) {
            glfwWindowShouldClose(window) == 0 );
 
     // Cleanup VBO and shader
-    glDeleteBuffers(1, &vertexbuffer);
-    glDeleteBuffers(1, &elementbuffer);
-    glDeleteProgram(programID);
-    glDeleteVertexArrays(1, &VertexArrayID);
+    sceneRenderer.cleanup();
 
     // Close OpenGL window and terminate GLFW
     glfwTerminate();
@@ -306,7 +237,6 @@ int main(void) {
 void processInput(GLFWwindow *window)
 {
     //terrain.handleInputs(window);
-
     camera.handleCameraInputs(deltaTime, window);
 }
 
@@ -322,6 +252,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
     
     // Redimensionner le framebuffer
-    resizeFramebuffer(width, height);
+    SceneRenderer::getInstance().resizeFramebuffer(width, height, renderScale);
 }
 

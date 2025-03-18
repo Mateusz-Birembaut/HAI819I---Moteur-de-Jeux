@@ -315,20 +315,20 @@ namespace min_
 	{
 		int Error = 0;
 
-		glm::vec1 A0 = glm::min(glm::vec1(1), glm::vec1(1));
+		glm::vec1 A0 = glm::localMin(glm::vec1(1), glm::vec1(1));
 
-		glm::vec2 B0 = glm::min(glm::vec2(1), glm::vec2(1));
-		glm::vec2 B1 = glm::min(glm::vec2(1), 1.0f);
+		glm::vec2 B0 = glm::localMin(glm::vec2(1), glm::vec2(1));
+		glm::vec2 B1 = glm::localMin(glm::vec2(1), 1.0f);
 		bool B2 = glm::all(glm::equal(B0, B1));
 		Error += B2 ? 0 : 1;
 
-		glm::vec3 C0 = glm::min(glm::vec3(1), glm::vec3(1));
-		glm::vec3 C1 = glm::min(glm::vec3(1), 1.0f);
+		glm::vec3 C0 = glm::localMin(glm::vec3(1), glm::vec3(1));
+		glm::vec3 C1 = glm::localMin(glm::vec3(1), 1.0f);
 		bool C2 = glm::all(glm::equal(C0, C1));
 		Error += C2 ? 0 : 1;
 
-		glm::vec4 D0 = glm::min(glm::vec4(1), glm::vec4(1));
-		glm::vec4 D1 = glm::min(glm::vec4(1), 1.0f);
+		glm::vec4 D0 = glm::localMin(glm::vec4(1), glm::vec4(1));
+		glm::vec4 D1 = glm::localMin(glm::vec4(1), 1.0f);
 		bool D2 = glm::all(glm::equal(D0, D1));
 		Error += D2 ? 0 : 1;
 

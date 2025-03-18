@@ -38,7 +38,7 @@ namespace glm
 		T const & y, 
 		T const & z)
 	{
-		return glm::min(glm::min(x, y), z);
+		return glm::localMin(glm::localMin(x, y), z);
 	}
 
 	template <typename T, template <typename> class C>
@@ -49,7 +49,7 @@ namespace glm
 		typename C<T>::T const & z
 	)
 	{
-		return glm::min(glm::min(x, y), z);
+		return glm::localMin(glm::localMin(x, y), z);
 	}
 
 	template <typename T, template <typename> class C>
@@ -60,7 +60,7 @@ namespace glm
 		C<T> const & z
 	)
 	{
-		return glm::min(glm::min(x, y), z);
+		return glm::localMin(glm::localMin(x, y), z);
 	}
 
 	template <typename T>
@@ -72,7 +72,7 @@ namespace glm
 		T const & w
 	)
 	{
-		return glm::min(glm::min(x, y), glm::min(z, w));
+		return glm::localMin(glm::localMin(x, y), glm::localMin(z, w));
 	}
 
 	template <typename T, template <typename> class C>
@@ -84,7 +84,7 @@ namespace glm
 		typename C<T>::T const & w
 	)
 	{
-		return glm::min(glm::min(x, y), glm::min(z, w));
+		return glm::localMin(glm::localMin(x, y), glm::localMin(z, w));
 	}
 
 	template <typename T, template <typename> class C>
@@ -96,7 +96,7 @@ namespace glm
 		C<T> const & w
 	)
 	{
-		return glm::min(glm::min(x, y), glm::min(z, w));
+		return glm::localMin(glm::localMin(x, y), glm::localMin(z, w));
 	}
 
 	template <typename T>

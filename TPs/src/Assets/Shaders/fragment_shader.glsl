@@ -11,9 +11,8 @@ in vec3 fragNormal;
 uniform bool u_hasTexture;
 uniform sampler2D u_texture;
 
-float rand(vec2 co){
-    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
-}
+uniform vec3 u_color;
+uniform bool u_isWireframe;
 
 void main(){
     if(u_hasTexture) {
