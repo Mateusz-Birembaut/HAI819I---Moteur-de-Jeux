@@ -450,12 +450,11 @@ void gameObjectColliderMenu(GameObject * selectedObject){
                 Console::getInstance().addLog("AABB généré autour du mesh");
                 newCollider->aabb.fitToMesh(selectedObject->mesh);
             }
-            
         }
     }
 }
 
-void gameObjectRigidBodyMenu(GameObject * selectedObject){
+/* void gameObjectRigidBodyMenu(GameObject * selectedObject){
     ImGui::Text("Mesh");
     ImGui::SameLine();
     if (selectedObject->mesh == nullptr){
@@ -472,4 +471,4 @@ void gameObjectRigidBodyMenu(GameObject * selectedObject){
             selectedObject->mesh = nullptr;
         }
     }
-}
+} */

@@ -21,9 +21,16 @@ struct AABB {
  
     glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f);
 
-    AABB() : min(0.0f), max(1.0f) {}
+    AABB() : min(-0.5f), max(0.5f) {}
     
     
+    bool checkCollision(const AABB& other){
+        if(worldMax.x < other.worldMin.x || worldMin.x > other.worldMax.x) return false;
+        if(worldMax.y < other.worldMin.y || worldMin.y > other.worldMax.y) return false;
+        if(worldMax.z < other.worldMin.z || worldMin.z > other.worldMax.z) return false;
+        return true;
+    }
+
     void fitToMesh(Mesh * mesh) {
         min = glm::vec3(std::numeric_limits<float>::max());
         max = glm::vec3(std::numeric_limits<float>::lowest());
@@ -34,10 +41,9 @@ struct AABB {
         }
     }
 
-
     //TODO : modif pour avoir qu'un seul vbo ect ?
-    //TODO : pour avoir la bouding box qui reste axis aligned
     void draw(GLuint programID, const glm::mat4& modelMatrix) {
+        Console::getInstance().addLog("Drawing AABB");
         updateWorldMinMax(modelMatrix);
 
         // Créer les 8 sommets de la boîte

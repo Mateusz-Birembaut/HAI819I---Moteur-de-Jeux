@@ -7,6 +7,10 @@
 #include "Components/Texture.hpp"
 #include "Components/Physics/RigidBody.hpp"
 #include "Components/Physics/Collider.hpp"
+
+#include "../Ressources/Globals.hpp"
+#include "../Rendering/Camera.hpp"
+
 #include "../Ressources/IdGenerator.hpp"
 #include <glm/fwd.hpp>
 #include <list>
@@ -52,33 +56,40 @@ class GameObject{
             }
         }
 
-        void drawSelfAndChild(GLuint shaderProgram) {
-            if (mesh == nullptr) {
-                for (auto&& child : children) {
-                    child->drawSelfAndChild(shaderProgram);
-                }
-                return;
-            }
-            
-            GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
-
-            GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
+        void GameObject::drawSelfAndChild(GLuint shaderProgram) {
+            bool toBeDrawn = true;
         
-            if (texture != nullptr) {
-                glUniform1i(hasTextureLoc, 1);
-                texture->bind(GL_TEXTURE0);  
-                GLint textureLoc = glGetUniformLocation(shaderProgram, "u_texture");
-                glUniform1i(textureLoc, 0);  
-            }else {
-                glUniform1i(hasTextureLoc, 0);
+            //also checks if has collider
+            if(!Camera::getInstance().isInCameraView(this)){
+                toBeDrawn = false;
             }
-
-            mesh->draw(shaderProgram); 
-            if (collider != nullptr) {
+        
+            if (toBeDrawn && collider->showCollider) {
                 collider->drawCollider(shaderProgram, transformation.modelMatrix);
             }
-
+        
+            if (mesh == nullptr) {
+                toBeDrawn = false;
+            }
+            
+            if (toBeDrawn){
+                GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
+                glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
+        
+                GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
+            
+                if (texture != nullptr) {
+                    glUniform1i(hasTextureLoc, 1);
+                    texture->bind(GL_TEXTURE0);  
+                    GLint textureLoc = glGetUniformLocation(shaderProgram, "u_texture");
+                    glUniform1i(textureLoc, 0);  
+                }else {
+                    glUniform1i(hasTextureLoc, 0);
+                }
+        
+                mesh->draw(shaderProgram); 
+            }
+        
             for (auto&& child : children) {
                 child->drawSelfAndChild(shaderProgram);
             }

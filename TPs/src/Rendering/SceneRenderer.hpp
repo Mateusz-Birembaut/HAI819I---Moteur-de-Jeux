@@ -97,7 +97,7 @@ class SceneRenderer {
                 glDepthFunc(GL_LESS);
 
                 // Cull triangles which normal is not towards the camera
-                //glEnable(GL_CULL_FACE);
+                glEnable(GL_CULL_FACE);
 
                 glGenVertexArrays(1, &VertexArrayID);
                 glBindVertexArray(VertexArrayID);
@@ -180,7 +180,7 @@ class SceneRenderer {
                 glUseProgram(programID);
 
                 // Compute the MVP matrix from keyboard and mouse input
-                camera.sendMatricesToShader(programID, windowWidth, windowHeight);
+                Camera::getInstance().sendMatricesToShader(programID, windowWidth, windowHeight);
 
                 if (!pauseAnimations){
                     SceneGraph::getInstance().updateAll(deltaTime);

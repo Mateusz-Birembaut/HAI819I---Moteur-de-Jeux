@@ -32,7 +32,6 @@
 }; */
 
 bool loadOBJ(const std::string & path, Mesh & mesh) {
-    printf("Loading OBJ file %s...\n", path);
 
     std::vector<glm::vec3> temp_vertices;
     std::vector<glm::vec2> temp_uvs;

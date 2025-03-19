@@ -138,10 +138,10 @@ int main(void) {
     Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", true);
 
     Mesh* sphereMesh = ressourceManager.addMesh("sphere");
-    Sphere::create(*sphereMesh, 90,90);
+    Sphere::create(*sphereMesh, 20,20);
 
     Mesh* terrainMesh = ressourceManager.addMesh("terrain");
-    Terrain::create(*terrainMesh, 120,120);
+    Terrain::create(*terrainMesh, 10,10);
 
     GameObject sun;
     sun.mesh = sphereMesh;
@@ -173,6 +173,27 @@ int main(void) {
     sun.addChild(&earth);
 
     SceneGraph& sceneGraph = SceneGraph::getInstance();
+
+    std::vector<GameObject> gameObjects;
+    for (size_t i = 0; i < 100; i++){
+        for (size_t j = 0; j < 100; j++)
+        {
+            GameObject newGameObject;
+            newGameObject.mesh = sphereMesh;
+            newGameObject.transformation.translation = glm::vec3(-50.0f + i, 0.0f, -50.0f + j); 
+            newGameObject.transformation.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+            earth.transformation.continuouslyRotate = glm::bvec3(false, true, false);
+            gameObjects.push_back(newGameObject);
+
+        }
+    }
+
+    for (size_t i = 0; i < gameObjects.size(); i++)
+    {
+        sceneGraph.addObject(&gameObjects[i]);
+    }
+    
+    
  
     sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);
@@ -237,7 +258,7 @@ int main(void) {
 void processInput(GLFWwindow *window)
 {
     //terrain.handleInputs(window);
-    camera.handleCameraInputs(deltaTime, window);
+    Camera::getInstance().handleCameraInputs(deltaTime, window);
 }
 
 
