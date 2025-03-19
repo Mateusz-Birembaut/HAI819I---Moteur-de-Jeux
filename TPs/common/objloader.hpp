@@ -2,13 +2,11 @@
 #define OBJLOADER_H
 #include <string>
 
-bool loadOBJ(
-	const char * path, 
-	std::vector<glm::vec3> & out_vertices, 
-	std::vector<glm::vec2> & out_uvs, 
-	std::vector<glm::vec3> & out_normals
-);
+#include "../src/Ressources/Structs.hpp"
+#include "../src/GameObjects/Components/Mesh.hpp"
 
+
+bool loadOBJ(const std::string & filename ,Mesh & mesh);
 
 
 bool loadAssImp(
@@ -23,6 +21,9 @@ bool loadAssImp(
 bool loadOFF( const std::string & filename ,
               std::vector< glm::vec3 > & vertices ,
               std::vector< unsigned short > & faces) ;
+
+bool loadOFF( const std::string & filename ,Mesh & mesh);
+  
 
 
 bool loadOFF( const std::string & filename ,

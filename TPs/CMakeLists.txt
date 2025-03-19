@@ -33,6 +33,7 @@ include_directories(
     external/glew-1.13.0/include/
     external/imgui/
     external/imgui/backends/ 
+    external/ImGuiFileDialog
     .
 )
 
@@ -49,6 +50,10 @@ set(IMGUI_SOURCES
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+set(IMGUI_FILEDIAL_SOURCES
+    external/ImGuiFileDialog/ImGuiFileDialog.cpp
 )
 
 add_definitions(
@@ -72,6 +77,7 @@ add_executable(TP
     common/objloader.hpp
 
     ${IMGUI_SOURCES}
+    ${IMGUI_FILEDIAL_SOURCES}
     
     src/Assets/Shaders/vertex_shader.glsl
     src/Assets/Shaders/fragment_shader.glsl

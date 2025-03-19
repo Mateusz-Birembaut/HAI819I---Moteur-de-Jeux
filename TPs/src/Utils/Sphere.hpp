@@ -12,7 +12,7 @@ class Sphere {
 
     public:
 
-        static void create(Mesh & mesh, int VertexCountX, int VertexCountY, float radius ) {
+        static void create(Mesh & mesh, int VertexCountX, int VertexCountY) {
             std::vector<Vertex> vertices;
             std::vector<unsigned short> indexes;
 
@@ -23,8 +23,8 @@ class Sphere {
 
             for (int i = 0; i <= VertexCountY; ++i) {
                 stackAngle = M_PI / 2 - i * stackStep;  // starting at pi/2, going to -pi/2
-                xy = radius * cosf(stackAngle);         // radius at stack
-                z = radius * sinf(stackAngle);          // z coordinate
+                xy = cosf(stackAngle);         // radius at stack
+                z = sinf(stackAngle);          // z coordinate
 
                 for (int j = 0; j <= VertexCountX; ++j) {
                     sectorAngle = j * sectorStep;      // sector angle

@@ -37,7 +37,7 @@ class Console {
 
         void displayLogs(){
             for (size_t i = 0; i < logs.size(); i++){
-                ImGui::Text(logs[i].c_str());
+                ImGui::Text("%s", logs[i].c_str());
             }
         }
 

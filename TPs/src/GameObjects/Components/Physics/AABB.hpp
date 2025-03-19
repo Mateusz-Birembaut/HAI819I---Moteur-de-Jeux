@@ -7,6 +7,7 @@
 
 #include "../Mesh.hpp"
 #include "../../../Ressources/Structs.hpp"
+#include "../../../UI/ImGuiConsole.hpp"
 #include <vector>
 #include "Collider.hpp"
 #include <glm/gtc/type_ptr.hpp>
@@ -14,7 +15,10 @@
 struct AABB {
     glm::vec3 min;
     glm::vec3 max;
-
+ 
+    glm::vec3 worldMin;
+    glm::vec3 worldMax;
+ 
     glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f);
 
     AABB() : min(0.0f), max(1.0f) {}
@@ -30,25 +34,22 @@ struct AABB {
         }
     }
 
-    bool intersects(const AABB& other) const {
-        return (min.x <= other.max.x && max.x >= other.min.x) &&
-               (min.y <= other.max.y && max.y >= other.min.y) &&
-               (min.z <= other.max.z && max.z >= other.min.z);
-    }
 
     //TODO : modif pour avoir qu'un seul vbo ect ?
     //TODO : pour avoir la bouding box qui reste axis aligned
     void draw(GLuint programID, const glm::mat4& modelMatrix) {
+        updateWorldMinMax(modelMatrix);
+
         // Créer les 8 sommets de la boîte
         std::vector<glm::vec3> corners = {
-            {min.x, min.y, min.z}, 
-            {max.x, min.y, min.z}, 
-            {min.x, max.y, min.z},
-            {max.x, max.y, min.z}, 
-            {min.x, min.y, max.z}, 
-            {max.x, min.y, max.z}, 
-            {min.x, max.y, max.z},
-            {max.x, max.y, max.z} 
+            {worldMin.x, worldMin.y, worldMin.z}, 
+            {worldMax.x, worldMin.y, worldMin.z}, 
+            {worldMin.x, worldMax.y, worldMin.z},
+            {worldMax.x, worldMax.y, worldMin.z}, 
+            {worldMin.x, worldMin.y, worldMax.z}, 
+            {worldMax.x, worldMin.y, worldMax.z}, 
+            {worldMin.x, worldMax.y, worldMax.z},
+            {worldMax.x, worldMax.y, worldMax.z} 
         };
         
         // Définir les arêtes
@@ -91,7 +92,7 @@ struct AABB {
         
         // Set model matrix
         GLint modelLoc = glGetUniformLocation(programID, "u_model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
         
         // Disable textures for this draw call
         GLint hasTextureLoc = glGetUniformLocation(programID, "u_hasTexture");
@@ -106,6 +107,35 @@ struct AABB {
         glDeleteVertexArrays(1, &vao);
         glDeleteBuffers(1, &vbo);
     }
+
+    void updateWorldMinMax(const glm::mat4& modelMatrix) {
+        worldMin = glm::vec3(std::numeric_limits<float>::max());
+        worldMax = glm::vec3(std::numeric_limits<float>::lowest());
+        
+        std::vector<glm::vec3> corners = {
+            {min.x, min.y, min.z},
+            {max.x, min.y, min.z},
+            {min.x, max.y, min.z},
+            {max.x, max.y, min.z},
+            {min.x, min.y, max.z},
+            {max.x, min.y, max.z},
+            {min.x, max.y, max.z},
+            {max.x, max.y, max.z}
+        };
+        
+        for (const auto& corner : corners) {
+            glm::vec4 worldCorner = modelMatrix * glm::vec4(corner, 1.0f);
+
+            worldMin.x = std::min(worldMin.x, worldCorner.x);
+            worldMin.y = std::min(worldMin.y, worldCorner.y);
+            worldMin.z = std::min(worldMin.z, worldCorner.z);
+            
+            worldMax.x = std::max(worldMax.x, worldCorner.x);
+            worldMax.y = std::max(worldMax.y, worldCorner.y);
+            worldMax.z = std::max(worldMax.z, worldCorner.z);
+        }
+    }
+
 
         
 

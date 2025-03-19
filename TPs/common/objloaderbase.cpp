@@ -10,10 +10,6 @@
 
 #include "objloader.hpp"
 
-#include "../src/Ressources/Structs.hpp"
-#include "../src/GameObjects/Components/Mesh.hpp"
-
-
 // Very, VERY simple OBJ loader.
 // Here is a short list of features a real function would provide : 
 // - Binary files. Reading a model should be just a few memcpy's away, not parsing a file at runtime. In short : OBJ is not very great.
@@ -24,227 +20,96 @@
 // - More secure. Change another line and you can inject code.
 // - Loading from memory, stream, etc
 
-/* struct Vertex{ 
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::vec3 normal;
-    glm::vec2 uv;
-}; */
-
-bool loadOBJ(const std::string & path, Mesh & mesh) {
+bool loadOBJ(
+        const char * path,
+        std::vector<glm::vec3> & out_vertices,
+        std::vector<glm::vec2> & out_uvs,
+        std::vector<glm::vec3> & out_normals
+        ){
     printf("Loading OBJ file %s...\n", path);
 
+    std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
     std::vector<glm::vec3> temp_vertices;
     std::vector<glm::vec2> temp_uvs;
     std::vector<glm::vec3> temp_normals;
-    std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 
-    FILE * file = fopen(path.c_str(), "r");
-    if(file == NULL) {
-        printf("Impossible to open the file! Check the path.\n");
+
+    FILE * file = fopen(path, "r");
+    if( file == NULL ){
+        printf("Impossible to open the file ! Are you in the right path ? See Tutorial 1 for details\n");
+        getchar();
         return false;
     }
 
-    while(1) {
-        char lineHeader[128];
-        int res = fscanf(file, "%s", lineHeader);
-        if (res == EOF) break;
+    while( 1 ){
 
-        if (strcmp(lineHeader, "v") == 0) {
+        char lineHeader[128];
+        // read the first word of the line
+        int res = fscanf(file, "%s", lineHeader);
+        if (res == EOF)
+            break; // EOF = End Of File. Quit the loop.
+
+        // else : parse lineHeader
+
+        if ( strcmp( lineHeader, "v" ) == 0 ){
             glm::vec3 vertex;
-            fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+            fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z );
             temp_vertices.push_back(vertex);
-        } else if (strcmp(lineHeader, "vt") == 0) {
+        }else if ( strcmp( lineHeader, "vt" ) == 0 ){
             glm::vec2 uv;
-            fscanf(file, "%f %f\n", &uv.x, &uv.y);
-            uv.y = -uv.y; // Invert V coordinate for DDS textures
+            fscanf(file, "%f %f\n", &uv.x, &uv.y );
+            uv.y = -uv.y; // Invert V coordinate since we will only use DDS texture, which are inverted. Remove if you want to use TGA or BMP loaders.
             temp_uvs.push_back(uv);
-        } else if (strcmp(lineHeader, "vn") == 0) {
+        }else if ( strcmp( lineHeader, "vn" ) == 0 ){
             glm::vec3 normal;
-            fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+            fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z );
             temp_normals.push_back(normal);
-        } else if (strcmp(lineHeader, "f") == 0) {
+        }else if ( strcmp( lineHeader, "f" ) == 0 ){
+            std::string vertex1, vertex2, vertex3;
             unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-            int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", 
-                &vertexIndex[0], &uvIndex[0], &normalIndex[0],
-                &vertexIndex[1], &uvIndex[1], &normalIndex[1],
-                &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-                
-            if (matches != 9) {
-                printf("File can't be read by our simple parser\n");
+            int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2] );
+            if (matches != 9){
+                printf("File can't be read by our simple parser :-( Try exporting with other options\n");
                 fclose(file);
                 return false;
             }
-            
             vertexIndices.push_back(vertexIndex[0]);
             vertexIndices.push_back(vertexIndex[1]);
             vertexIndices.push_back(vertexIndex[2]);
-            uvIndices.push_back(uvIndex[0]);
-            uvIndices.push_back(uvIndex[1]);
-            uvIndices.push_back(uvIndex[2]);
+            uvIndices    .push_back(uvIndex[0]);
+            uvIndices    .push_back(uvIndex[1]);
+            uvIndices    .push_back(uvIndex[2]);
             normalIndices.push_back(normalIndex[0]);
             normalIndices.push_back(normalIndex[1]);
             normalIndices.push_back(normalIndex[2]);
-        } else {
+        }else{
+            // Probably a comment, eat up the rest of the line
             char stupidBuffer[1000];
             fgets(stupidBuffer, 1000, file);
         }
+
     }
 
-    std::vector<Vertex> vertices;
-    std::vector<unsigned short> indices;
-    
-    // Pour chaque vertex de chaque triangle
-    for(unsigned int i = 0; i < vertexIndices.size(); i++) {
+    // For each vertex of each triangle
+    for( unsigned int i=0; i<vertexIndices.size(); i++ ){
+
+        // Get the indices of its attributes
         unsigned int vertexIndex = vertexIndices[i];
         unsigned int uvIndex = uvIndices[i];
         unsigned int normalIndex = normalIndices[i];
-        
-        // Obtenir les attributs
-        glm::vec3 position = temp_vertices[vertexIndex-1];
-        glm::vec2 uv = temp_uvs[uvIndex-1];
-        glm::vec3 normal = temp_normals[normalIndex-1];
-        
-        // Créer le Vertex et l'ajouter au Mesh
-        Vertex vertex;
-        vertex.position = position;
-        vertex.normal = normal;
-        vertex.uv = uv;
-        vertex.color = glm::vec3(1.0f, 1.0f, 1.0f); // Couleur par défaut
-        
-        vertices.push_back(vertex);
-        indices.push_back(i);
-    }
-    mesh.setIndexes(indices);
-    mesh.setVertices(vertices);
 
-    
+        // Get the attributes thanks to the index
+        glm::vec3 vertex = temp_vertices[ vertexIndex-1 ];
+        glm::vec2 uv = temp_uvs[ uvIndex-1 ];
+        glm::vec3 normal = temp_normals[ normalIndex-1 ];
+
+        // Put the attributes in buffers
+        out_vertices.push_back(vertex);
+        out_uvs     .push_back(uv);
+        out_normals .push_back(normal);
+
+    }
     fclose(file);
-    return true;
-}
-
-bool loadOFF(const std::string & filename, Mesh & mesh) {
-    std::vector<glm::vec3> vertices;
-    std::vector<unsigned short> indices;
-    std::vector<std::vector<unsigned short>> triangles;
-    
-    std::ifstream myfile;
-    myfile.open(filename.c_str());
-    if (!myfile.is_open()) {
-        std::cout << filename << " cannot be opened" << std::endl;
-        return false;
-    }
-
-    std::string magic_s;
-    myfile >> magic_s;
-    if(magic_s != "OFF") {
-        std::cout << magic_s << " != OFF : We handle ONLY *.off files." << std::endl;
-        myfile.close();
-        return false;
-    }
-
-    int n_vertices, n_faces, dummy_int;
-    myfile >> n_vertices >> n_faces >> dummy_int;
-
-    vertices.resize(n_vertices);
-    
-    // Charger les sommets
-    for(int v = 0; v < n_vertices; ++v) {
-        myfile >> vertices[v].x >> vertices[v].y >> vertices[v].z;
-        if(std::isnan(vertices[v].x)) vertices[v].x = 0.0;
-        if(std::isnan(vertices[v].y)) vertices[v].y = 0.0;
-        if(std::isnan(vertices[v].z)) vertices[v].z = 0.0;
-    }
-
-    // Charger les faces
-    for(int f = 0; f < n_faces; ++f) {
-        int n_vertices_on_face;
-        myfile >> n_vertices_on_face;
-
-        if(n_vertices_on_face == 3) {
-            unsigned short v1, v2, v3;
-            myfile >> v1 >> v2 >> v3;
-            indices.push_back(v1);
-            indices.push_back(v2);
-            indices.push_back(v3);
-        }
-        else if(n_vertices_on_face > 3) {
-            // Gérer les polygones avec plus de 3 sommets
-            std::vector<unsigned short> vhandles(n_vertices_on_face);
-            for(int i = 0; i < n_vertices_on_face; ++i)
-                myfile >> vhandles[i];
-            
-            // Convertir en triangles (triangulation en éventail)
-            for(unsigned short i = 0; i < vhandles.size() - 2; ++i) {
-                indices.push_back(vhandles[0]);
-                indices.push_back(vhandles[i + 1]);
-                indices.push_back(vhandles[i + 2]);
-            }
-        }
-        else {
-            std::cout << "OFFIO::open error: Face number " << f 
-                      << " has " << n_vertices_on_face << " vertices" << std::endl;
-            myfile.close();
-            return false;
-        }
-    }
-    
-    myfile.close();
-    
-    std::vector<Vertex> vertices_mesh;
-    // Remplir le Mesh avec les vertex
-    vertices_mesh.clear();
-    
-    // Calcul des normales pour chaque face
-    std::vector<glm::vec3> normals(n_vertices, glm::vec3(0.0f));
-    
-    // Parcourir toutes les faces pour calculer les normales
-    for(size_t i = 0; i < indices.size(); i += 3) {
-        unsigned short i1 = indices[i];
-        unsigned short i2 = indices[i + 1];
-        unsigned short i3 = indices[i + 2];
-        
-        glm::vec3 v1 = vertices[i1];
-        glm::vec3 v2 = vertices[i2];
-        glm::vec3 v3 = vertices[i3];
-        
-        // Calculer la normale de la face
-        glm::vec3 normal = glm::normalize(glm::cross(v2 - v1, v3 - v1));
-        
-        // Accumuler les normales pour chaque sommet
-        normals[i1] += normal;
-        normals[i2] += normal;
-        normals[i3] += normal;
-    }
-    
-    // Normaliser toutes les normales
-    for(auto& n : normals) {
-        if(glm::length(n) > 0.0f) {
-            n = glm::normalize(n);
-        }
-    }
-    
-    // Ajouter les sommets au maillage en utilisant les indices
-    for(size_t i = 0; i < indices.size(); ++i) {
-        unsigned short idx = indices[i];
-        
-        Vertex vertex;
-        vertex.position = vertices[idx];
-        vertex.normal = normals[idx];
-        vertex.color = glm::vec3(1.0f, 1.0f, 1.0f); // Couleur par défaut
-        vertex.uv = glm::vec2(0.0f, 0.0f);          // UV par défaut
-        
-        vertices_mesh.push_back(vertex);
-    }
-    
-    // Create sequential indices (0, 1, 2, ...) since vertices are already in the right order
-    std::vector<unsigned short> sequential_indices(vertices_mesh.size());
-    for(size_t i = 0; i < vertices_mesh.size(); i++) {
-        sequential_indices[i] = i;
-    }
-    
-    mesh.setVertices(vertices_mesh);
-    mesh.setIndexes(sequential_indices);
     return true;
 }
 

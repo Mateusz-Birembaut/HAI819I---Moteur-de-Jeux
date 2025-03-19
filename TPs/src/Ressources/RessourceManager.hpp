@@ -34,11 +34,32 @@ class RessourceManager{
                 return &it->second;
             }else {
                 Texture texture(path, flipVertically);
+                bool testLoad = texture.load(true);
+                if (!testLoad){
+                    return nullptr;
+                }
                 textures.insert(std::pair<std::string, Texture>(textureId, texture));
                 Texture* tex = &textures.find(textureId)->second;
                 tex->loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
                 return tex;
-            }     
+            }    
+        }
+
+        Texture* getTexture(std::string textureId){
+            auto it = textures.find(textureId);
+            if (it != textures.end()){
+                return &it->second;
+            }else {
+                return nullptr;
+            }    
+        }
+
+        std::vector<const char*> getTextureNames(){
+            std::vector<const char*> textureNames;
+            for (auto const& x : textures){
+                textureNames.push_back(x.first.c_str());
+            }
+            return textureNames;
         }
 
         Mesh* addMesh(std::string meshId){
@@ -50,6 +71,23 @@ class RessourceManager{
                 meshes.insert(std::pair<std::string, Mesh>(meshId, mesh));
                 return &meshes.find(meshId)->second;
             }
+        }
+
+        Mesh* getMesh(std::string meshId){
+            auto it = meshes.find(meshId);
+            if (it != meshes.end()){
+                return &it->second;
+            }else {
+                return nullptr;
+            }
+        }
+
+        std::vector<const char*> getMeshesNames(){
+            std::vector<const char*> meshNames;
+            for (auto const& x : meshes){
+                meshNames.push_back(x.first.c_str());
+            }
+            return meshNames;
         }
 
         Collider* addCollider(std::string gameObjectId){

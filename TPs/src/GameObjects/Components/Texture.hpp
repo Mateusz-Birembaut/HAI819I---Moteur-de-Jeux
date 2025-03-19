@@ -42,12 +42,16 @@ class Texture {
             updateGLTexture();
         }
     
-        void load() {
+        bool load(bool test = false) {
+            if (data != nullptr) {
+                return true;
+            }
+            
             stbi_set_flip_vertically_on_load(flipVertically);
             data = stbi_load(path, &width, &height, &nrChannels, 0);
             if (!data) {
-                std::cerr << "Failed to load texture" << std::endl;
-                return;
+                std::cout << "Failed to load texture" << std::endl;
+                return false;
             }
     
             if (nrChannels == 1) {
@@ -57,9 +61,10 @@ class Texture {
             } else if (nrChannels == 4) {
                 format = GL_RGBA;
             } else {
-                std::cerr << "Unsupported number of channels." << std::endl;
+                std::cout << "Unsupported number of channels." << std::endl;
                 stbi_image_free(data);
                 data = nullptr;
+                return false;
             }
             if (width % 2 == 0 && height % 2 == 0){
                 isPowerOfTwo = true;
@@ -72,7 +77,15 @@ class Texture {
                 std::cout << "Format: " << format << std::endl;
                 std::cout << "Is power of two: " << isPowerOfTwo << std::endl;
             }
+
+            if (test){
+                stbi_image_free(data);
+                data = nullptr;
+                return true;
+            }
             
+
+            return true;
 
         }
     

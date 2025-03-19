@@ -138,10 +138,10 @@ int main(void) {
     Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", true);
 
     Mesh* sphereMesh = ressourceManager.addMesh("sphere");
-    Sphere::create(*sphereMesh, 90,90, 1.0f);
+    Sphere::create(*sphereMesh, 90,90);
 
     Mesh* terrainMesh = ressourceManager.addMesh("terrain");
-    Terrain::create(*terrainMesh, 120,120, 1.0f, 1.0f);
+    Terrain::create(*terrainMesh, 120,120);
 
     GameObject sun;
     sun.mesh = sphereMesh;

@@ -1,3 +1,6 @@
 [submodule "TPs/TPs/external/imgui"]
 	path = TPs/TPs/external/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "TPs/external/ImGuiFileDialog"]
+	path = TPs/external/ImGuiFileDialog
+	url = https://github.com/ocornut/imgui.git

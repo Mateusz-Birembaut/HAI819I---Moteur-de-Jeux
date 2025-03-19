@@ -22,8 +22,12 @@ class Mesh {
         ~Mesh() {
         }
 
-        std::vector<Vertex> getVertices(){
+        std::vector<Vertex> getVertices(){            
             return vertices;
+        }
+
+        std::vector<unsigned short> getIndexes(){
+            return indexes;
         }
 
         void setVertices(std::vector<Vertex> _vertices){
