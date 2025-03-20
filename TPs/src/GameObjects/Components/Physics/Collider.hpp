@@ -1,28 +1,19 @@
-
-
 #ifndef COLLIDER_HPP
 #define COLLIDER_HPP
 
+#include <GL/glew.h>
 #include "AABB.hpp"
-
-class Collider{
-    public:
-
-        AABB aabb;
-        bool isTrigger = false;
-        bool showCollider = false;
-
-        Collider(){
-            aabb = AABB();
-        }
-
-        void drawCollider(GLuint programID, const glm::mat4& modelMatrix){
-            aabb.draw(programID, modelMatrix);
-        }
+#include <glm/glm.hpp>
 
 
+class Collider {
+public:
+    AABB aabb;
+    bool isTrigger = false;
+    bool showCollider = true;
 
+    Collider();
+    void drawCollider(GLuint programID, const glm::mat4& modelMatrix);
 };
 
-
-#endif
+#endif // COLLIDER_HPP

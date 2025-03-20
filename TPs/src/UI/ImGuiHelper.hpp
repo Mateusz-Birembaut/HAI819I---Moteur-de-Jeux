@@ -6,6 +6,7 @@
 
 #include "../GameObjects/SceneGraph.hpp"
 #include "../GameObjects/GameObject.hpp"
+#include "../Ressources/IdGenerator.hpp"
 
 #include <common/objloader.hpp>
 #include <vector>
@@ -428,6 +429,10 @@ void gameObjectColliderMenu(GameObject * selectedObject){
     bool hasCollider = selectedObject->collider != nullptr;
     if (hasCollider){
         ImGui::Text("Collider :");
+        ImGui::SameLine();
+        if (selectedObject->collider->showCollider ?  ImGui::Button("Hide Collider") : ImGui::Button("Display Collider") ){
+            selectedObject->collider->showCollider = !selectedObject->collider->showCollider;
+        }
         ImGui::DragFloat3("min", &selectedObject->collider->aabb.min.x, 0.1f);
         ImGui::DragFloat3("max", &selectedObject->collider->aabb.max.x, 0.1f);
         ImGui::DragFloat3("world min", &selectedObject->collider->aabb.worldMin.x, 0.1f);
@@ -453,22 +458,3 @@ void gameObjectColliderMenu(GameObject * selectedObject){
         }
     }
 }
-
-/* void gameObjectRigidBodyMenu(GameObject * selectedObject){
-    ImGui::Text("Mesh");
-    ImGui::SameLine();
-    if (selectedObject->mesh == nullptr){
-        if (ImGui::Button("Add Mesh")) {
-            // TODO : ajouter fenetre pour choisir le type du nouveau mesh avec son id et paramètres et le creer ou un utilsier mesh existant
-            Console::getInstance().addLog("Ajout du mesh à l'object");
-            Mesh* newMesh = RessourceManager::getInstance().addMesh("sphere");
-            selectedObject->mesh = newMesh;
-        }
-    }else {
-        //ImGui::Text("Mesh: %s", selectedObject->mesh->getName());
-        if (ImGui::Button("Remove Mesh")) {
-            Console::getInstance().addLog("Suppression du lien entre l'objet et le mesh");
-            selectedObject->mesh = nullptr;
-        }
-    }
-} */

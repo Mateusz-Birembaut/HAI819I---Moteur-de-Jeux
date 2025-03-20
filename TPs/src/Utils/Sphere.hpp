@@ -12,61 +12,45 @@ class Sphere {
 
     public:
 
-        static void create(Mesh & mesh, int VertexCountX, int VertexCountY) {
+        static glm::vec3 SphericalCoordinatesToEuclidean( float theta , float phi ) {
+            return glm::vec3( cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));
+        }
+
+        static void create(Mesh & mesh, int nTheta, int nPhi) {
             std::vector<Vertex> vertices;
             std::vector<unsigned short> indexes;
 
-            float x, y, z, xy;                          // vertex position
-            float sectorStep = 2 * M_PI / VertexCountX;   // angle increment
-            float stackStep = M_PI / VertexCountY;         // angle increment
-            float sectorAngle, stackAngle;
+            for( unsigned int thetaIt = 0 ; thetaIt < nTheta ; ++thetaIt ) {
+                float u = (float)(thetaIt) / (float)(nTheta-1);
+                float theta = u * 2 * M_PI;
+                for( unsigned int phiIt = 0 ; phiIt < nPhi ; ++phiIt ) {
+                    unsigned int vertexIndex = thetaIt + phiIt * nTheta;
+                    float v = (float)(phiIt) / (float)(nPhi-1);
+                    float phi = - M_PI/2.0 + v * M_PI;
 
-            for (int i = 0; i <= VertexCountY; ++i) {
-                stackAngle = M_PI / 2 - i * stackStep;  // starting at pi/2, going to -pi/2
-                xy = cosf(stackAngle);         // radius at stack
-                z = sinf(stackAngle);          // z coordinate
-
-                for (int j = 0; j <= VertexCountX; ++j) {
-                    sectorAngle = j * sectorStep;      // sector angle
-
-                    x = xy * cosf(sectorAngle);         // x coordinate
-                    y = xy * sinf(sectorAngle);         // y coordinate
-
-                    Vertex v;
-                    // Modifier l'orientation des coordonnées pour que Z soit l'axe vertical (haut-bas)
-                    v.position = glm::vec3(x, z, y);  // Modifié: permutation des coordonnées y et z
-                    v.color = glm::vec3(0.0f, 1.0f, 0.0f); // green color for sphere
+                    Vertex vertex;
+                    vertex.position = SphericalCoordinatesToEuclidean( theta , phi );
+                    vertex.color = glm::vec3(0.0f, 0.0f, 0.0f); 
+                    vertex.normal = vertex.position;
+                    vertex.uv = {-u,-v}; 
                     
-                    // Normaliser correctement la normale en fonction des nouvelles coordonnées
-                    v.normal = glm::normalize(glm::vec3(x, z, y));
-                    
-                    // Coordonnées UV ajustées pour les mappings de textures terrestres
-                    // Longitude (j) -> U, avec décalage pour avoir Greenwich au bon endroit
-                    // Latitude (i) -> V inversé pour que le pôle nord soit en haut
-                    float u = float(j) / VertexCountX;
-                    u = fmod(u - 0.25f, 1.0f); // Décalage pour aligner les continents
-                    v.uv = glm::vec2(u, 1.0f - (float(i) / VertexCountY));
+                    vertices.push_back(vertex);
 
-                    vertices.push_back(v);
                 }
             }
-            // indices for drawing triangles
-            unsigned short k1, k2;
-            for (int i = 0; i < VertexCountY; ++i) {
-                k1 = i * (VertexCountX + 1);     // current stack
-                k2 = k1 + VertexCountX + 1;      // next stack
 
-                for (int j = 0; j < VertexCountX; ++j, ++k1, ++k2) {
-                    if (i != 0) {
-                        indexes.push_back(k1);
-                        indexes.push_back(k1 + 1);
-                        indexes.push_back(k2);
-                    }
-                    if (i != (VertexCountY - 1)) {
-                        indexes.push_back(k1 + 1);
-                        indexes.push_back(k2 + 1);
-                        indexes.push_back(k2);
-                    }
+            for( unsigned int thetaIt = 0 ; thetaIt < nTheta - 1 ; ++thetaIt ) {
+                for( unsigned int phiIt = 0 ; phiIt < nPhi - 1 ; ++phiIt ) {
+                    unsigned int vertexuv = thetaIt + phiIt * nTheta;
+                    unsigned int vertexUv = thetaIt + 1 + phiIt * nTheta;
+                    unsigned int vertexuV = thetaIt + (phiIt+1) * nTheta;
+                    unsigned int vertexUV = thetaIt + 1 + (phiIt+1) * nTheta;
+                    indexes.push_back( vertexuv );
+                    indexes.push_back( vertexUv );
+                    indexes.push_back( vertexUV );
+                    indexes.push_back( vertexuv );
+                    indexes.push_back( vertexUV );
+                    indexes.push_back( vertexuV );
                 }
             }
 
@@ -76,9 +60,50 @@ class Sphere {
             mesh.createBuffers();
         }
 
+
 };
     
-
+/* 
+void build_arrays(){
+    unsigned int nTheta = 20 , nPhi = 20;
+    positions_array.resize(3 * nTheta * nPhi );
+    normalsArray.resize(3 * nTheta * nPhi );
+    uvs_array.resize(2 * nTheta * nPhi );
+    for( unsigned int thetaIt = 0 ; thetaIt < nTheta ; ++thetaIt ) {
+        float u = (float)(thetaIt) / (float)(nTheta-1);
+        float theta = u * 2 * M_PI;
+        for( unsigned int phiIt = 0 ; phiIt < nPhi ; ++phiIt ) {
+            unsigned int vertexIndex = thetaIt + phiIt * nTheta;
+            float v = (float)(phiIt) / (float)(nPhi-1);
+            float phi = - M_PI/2.0 + v * M_PI;
+            Vec3 xyz = SphericalCoordinatesToEuclidean( theta , phi );
+            positions_array[ 3 * vertexIndex + 0 ] = m_center[0] + m_radius * xyz[0];
+            positions_array[ 3 * vertexIndex + 1 ] = m_center[1] + m_radius * xyz[1];
+            positions_array[ 3 * vertexIndex + 2 ] = m_center[2] + m_radius * xyz[2];
+            normalsArray[ 3 * vertexIndex + 0 ] = xyz[0];
+            normalsArray[ 3 * vertexIndex + 1 ] = xyz[1];
+            normalsArray[ 3 * vertexIndex + 2 ] = xyz[2];
+            uvs_array[ 2 * vertexIndex + 0 ] = u;
+            uvs_array[ 2 * vertexIndex + 1 ] = v;
+        }
+    }
+    triangles_array.clear();
+    for( unsigned int thetaIt = 0 ; thetaIt < nTheta - 1 ; ++thetaIt ) {
+        for( unsigned int phiIt = 0 ; phiIt < nPhi - 1 ; ++phiIt ) {
+            unsigned int vertexuv = thetaIt + phiIt * nTheta;
+            unsigned int vertexUv = thetaIt + 1 + phiIt * nTheta;
+            unsigned int vertexuV = thetaIt + (phiIt+1) * nTheta;
+            unsigned int vertexUV = thetaIt + 1 + (phiIt+1) * nTheta;
+            triangles_array.push_back( vertexuv );
+            triangles_array.push_back( vertexUv );
+            triangles_array.push_back( vertexUV );
+            triangles_array.push_back( vertexuv );
+            triangles_array.push_back( vertexUV );
+            triangles_array.push_back( vertexuV );
+        }
+    }
+}
+ */
 
 
 #endif

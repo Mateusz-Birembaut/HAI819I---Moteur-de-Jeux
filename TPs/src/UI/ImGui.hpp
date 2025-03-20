@@ -8,6 +8,8 @@
 #include "../GameObjects/SceneGraph.hpp"
 #include "../GameObjects/GameObject.hpp"
 
+#include "../Ressources/Globals.hpp"
+
 #include "ImGuiHelper.hpp"
 #include "ImGuiConsole.hpp"
 
@@ -71,8 +73,8 @@ void renderImGui() {
     if (dockspace_open) {
         // Menu principal
         if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("Fichier")) {
-                if (ImGui::MenuItem("Quitter", "Alt+F4")) { /* action */ }
+            if (ImGui::BeginMenu("Options")) {
+                if (frustumCulling ? ImGui::MenuItem("Desactiver Fustrum Culling") : ImGui::MenuItem("Activer Fustrum Culling")) { frustumCulling = !frustumCulling ;}
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -200,12 +202,13 @@ void renderImGui() {
     if (ImGui::Begin("Vue Scène")) {
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::SameLine();
+        ImGui::Text("Game Objects Rendered : %d", SceneGraph::getInstance().getNbRenderedGameObjects());
 
         SceneRenderer & sceneRenderer = SceneRenderer::getInstance();
 
         if (sceneRenderer.isInitialized()) {
             if (sceneRenderer.getPauseAnimations() ? ImGui::Button("Animation Paused") : ImGui::Button("Animation Running")){
-                sceneRenderer.setPauseAnimations(!pauseAnimations);
+                sceneRenderer.setPauseAnimations(!sceneRenderer.getPauseAnimations());
             }
             //ImGui::InputInt("Framerate Cap", &ImGui::GetIO().Framerate, 1, 5);
             

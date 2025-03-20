@@ -1,9 +1,6 @@
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
-#include "../Rendering/Camera.hpp"
-
-
 
 // window
 inline GLFWwindow* window;
@@ -21,11 +18,6 @@ inline float lastFrame = 0.0f;
 inline float angle = 0.;
 inline float zoom = 1.;
 
-
-inline bool pauseAnimations = false;
-
-
-
-
+inline bool frustumCulling = true;
 
 #endif

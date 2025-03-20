@@ -17,15 +17,15 @@ class Terrain {
                     float t_x = float(i) / float(VertexCountX - 1);
                     float t_z = float(j) / float(VertexCountZ - 1);
 
-                    float x = t_x  - ( 0.5f);
-                    float z = t_z  - ( 0.5f);
+                    float x = t_x - 0.5f;
+                    float z = t_z - 0.5f;
 
                     float y = 0.0f;
 
                     Vertex v;
                     v.position = glm::vec3(x, y, z);
                     //v.color = 
-                    //v.normal = 
+                    v.normal = {0.0f, 1.0f, 0.0f};
                     v.uv = glm::vec2(t_x , t_z);
 
                     vertices.push_back(v);
@@ -41,12 +41,12 @@ class Terrain {
                         unsigned short topRightNeighbor = (i + 1) * VertexCountX + (j + 1);
 
                         indexes.push_back(baseIndex);
-                        indexes.push_back(topNeighbor);
                         indexes.push_back(rightNeighbor);
+                        indexes.push_back(topNeighbor);
 
                         indexes.push_back(topRightNeighbor);
-                        indexes.push_back(rightNeighbor);
                         indexes.push_back(topNeighbor);
+                        indexes.push_back(rightNeighbor);
                     }
                 }
             }

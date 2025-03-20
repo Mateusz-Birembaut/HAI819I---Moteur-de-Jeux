@@ -12,5 +12,4 @@ struct Vertex{
 };
 
 
-
 #endif

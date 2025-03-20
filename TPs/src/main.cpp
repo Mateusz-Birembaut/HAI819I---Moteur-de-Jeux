@@ -6,8 +6,6 @@
 #include <vector>
 #include <iostream>
 
-
-
 // Include GLEW
 #include <GL/glew.h>
 
@@ -134,8 +132,9 @@ int main(void) {
 
     RessourceManager& ressourceManager = RessourceManager::getInstance();
 
-    Texture* earthTexture = ressourceManager.addTexture("earth" ,"../src/Assets/Textures/damier.jpg", true);
-    Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", true);
+    Texture* earthTexture = ressourceManager.addTexture("earth" ,"../src/Assets/Textures/earthTexture.jpg", false);
+    Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", false);
+    Texture* damierTexture = ressourceManager.addTexture("damier" ,"../src/Assets/Textures/damier.jpg", false);
 
     Mesh* sphereMesh = ressourceManager.addMesh("sphere");
     Sphere::create(*sphereMesh, 20,20);
@@ -146,6 +145,9 @@ int main(void) {
     GameObject sun;
     sun.mesh = sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
+    sun.collider = RessourceManager::getInstance().addCollider(sun.gameObjectId);
+    sun.collider->aabb.fitToMesh(sphereMesh);
+    sun.collider->showCollider = false;
 
 
     GameObject earth;
@@ -155,6 +157,9 @@ int main(void) {
     earth.transformation.scale = glm::vec3(0.5f, 0.5f, 0.5f);
     earth.transformation.rotationSpeed = 10;
     earth.transformation.continuouslyRotate = glm::bvec3(false, true, false);
+    earth.collider = RessourceManager::getInstance().addCollider(earth.gameObjectId);
+    earth.collider->aabb.fitToMesh(sphereMesh);
+    earth.collider->showCollider = false;
 
 
     GameObject moon;
@@ -162,29 +167,46 @@ int main(void) {
     moon.texture = moonTexture;
     moon.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     moon.transformation.scale = glm::vec3(0.25f, 0.25f, 0.25f);
+    moon.collider = RessourceManager::getInstance().addCollider(moon.gameObjectId);
+    moon.collider->aabb.fitToMesh(sphereMesh);
+    moon.collider->showCollider = false;
 
     GameObject terrain;
     terrain.mesh = terrainMesh;
     terrain.texture = earthTexture;
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
     terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
+    terrain.collider = RessourceManager::getInstance().addCollider(terrain.gameObjectId);
+    terrain.collider->aabb.fitToMesh(sphereMesh);
+    terrain.collider->showCollider = false;
 
     earth.addChild(&moon);
     sun.addChild(&earth);
 
     SceneGraph& sceneGraph = SceneGraph::getInstance();
 
-    std::vector<GameObject> gameObjects;
-    for (size_t i = 0; i < 100; i++){
-        for (size_t j = 0; j < 100; j++)
-        {
-            GameObject newGameObject;
-            newGameObject.mesh = sphereMesh;
-            newGameObject.transformation.translation = glm::vec3(-50.0f + i, 0.0f, -50.0f + j); 
-            newGameObject.transformation.scale = glm::vec3(0.2f, 0.2f, 0.2f);
-            earth.transformation.continuouslyRotate = glm::bvec3(false, true, false);
-            gameObjects.push_back(newGameObject);
+    sceneGraph.addObject(&terrain);
+    sceneGraph.addObject(&sun); 
 
+
+    std::vector<GameObject> gameObjects;
+    for (size_t i = 0; i < 100; i+=2){
+        for (size_t j = 0; j < 100; j+=2)
+        {
+            for (size_t k = 0; k < 100; k+=2)
+            {
+                GameObject newGameObject;
+                newGameObject.mesh = sphereMesh;
+                newGameObject.transformation.translation = glm::vec3(-50.0f + i, -50.0f + k, -50.0f + j); 
+                newGameObject.transformation.scale = glm::vec3(0.2f, 0.2f, 0.2f);
+                newGameObject.collider = RessourceManager::getInstance().addCollider(newGameObject.gameObjectId);
+                newGameObject.collider->aabb.fitToMesh(sphereMesh);
+                newGameObject.collider->showCollider = true;
+                newGameObject.transformation.continuouslyRotate = glm::bvec3(false, false, false);
+                newGameObject.texture = earthTexture;
+                gameObjects.push_back(newGameObject);
+            }
+        
         }
     }
 
@@ -192,11 +214,9 @@ int main(void) {
     {
         sceneGraph.addObject(&gameObjects[i]);
     }
-    
+
     
  
-    sceneGraph.addObject(&terrain);
-    sceneGraph.addObject(&sun);
 
 
     // For speed computation

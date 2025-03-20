@@ -5,7 +5,7 @@ project (Tutorials)
 find_package(OpenGL REQUIRED)
 
 if( CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR )
-    message( FATAL_ERROR "Please select another Build Directory ! (and give it a clever name, like bin_Visual2012_64bits/)" )
+    message( FATAL_ERROR "Please select another Build Directory ! (and give it a clever name, like bin_Visual2012_64bits/" )
 endif()
 if( CMAKE_SOURCE_DIR MATCHES " " )
     message( "Your Source Directory contains spaces. If you experience problems when compiling, this can be the cause." )
@@ -34,6 +34,7 @@ include_directories(
     external/imgui/
     external/imgui/backends/ 
     external/ImGuiFileDialog
+    common/
     .
 )
 
@@ -42,6 +43,35 @@ set(ALL_LIBS
     glfw
     GLEW_1130
 )
+
+# Exclude problematic files causing duplicate symbols
+file(GLOB_RECURSE COMMON_SOURCES "common/*.cpp" "common/*.hpp")
+list(FILTER COMMON_SOURCES EXCLUDE REGEX ".*objloaderbase\\.cpp$")
+list(FILTER COMMON_SOURCES EXCLUDE REGEX ".*stb_image\\.cpp$")  # Exclude stb_image.cpp from glob
+
+# Add stb_image separately to control its inclusion
+set(STB_IMAGE_SOURCE "${CMAKE_SOURCE_DIR}/common/stb_image.cpp")
+
+# Define STB_IMAGE_IMPLEMENTATION only in stb_image.cpp
+set_source_files_properties(${STB_IMAGE_SOURCE} PROPERTIES
+    COMPILE_DEFINITIONS "STB_IMAGE_IMPLEMENTATION")
+
+file(GLOB_RECURSE SRC_SOURCES 
+    "src/*.cpp" 
+    "src/*.hpp"
+    "src/*.h"
+    "src/GameObjects/*.cpp" 
+    "src/GameObjects/*.hpp"
+    "src/GameObjects/Components/*.cpp" 
+    "src/GameObjects/Components/*.hpp"
+    "src/Rendering/*.cpp" 
+    "src/Rendering/*.hpp"
+    "src/Ressources/*.cpp" 
+    "src/Ressources/*.hpp"
+    "src/UI/*.cpp" 
+    "src/UI/*.hpp"
+)
+file(GLOB_RECURSE SHADER_SOURCES "src/Assets/Shaders/*.glsl")
 
 set(IMGUI_SOURCES
     external/imgui/imgui.cpp
@@ -56,32 +86,30 @@ set(IMGUI_FILEDIAL_SOURCES
     external/ImGuiFileDialog/ImGuiFileDialog.cpp
 )
 
+# Fix for stb_image duplicate definitions
 add_definitions(
     -DTW_STATIC
     -DTW_NO_LIB_PRAGMA
     -DTW_NO_DIRECT3D
     -DGLEW_STATIC
     -D_CRT_SECURE_NO_WARNINGS
+    -DGLFW_INCLUDE_NONE  # Prevents GLFW from including OpenGL headers
 )
 
+# Set compile options
 set(CMAKE_BUILD_TYPE Debug)
 add_compile_options(-g)
 
 # TP1
 add_executable(TP
-    src/main.cpp
-    common/shader.cpp
-    common/shader.hpp
-    common/texture.cpp
-    common/objloader.cpp
-    common/objloader.hpp
-
+    ${COMMON_SOURCES}
+    ${SRC_SOURCES}
+    ${SHADER_SOURCES}
     ${IMGUI_SOURCES}
     ${IMGUI_FILEDIAL_SOURCES}
-    
-    src/Assets/Shaders/vertex_shader.glsl
-    src/Assets/Shaders/fragment_shader.glsl
+    ${STB_IMAGE_SOURCE}  # Add stb_image separately
 )
+
 target_link_libraries(TP
     ${ALL_LIBS}
 )
@@ -98,14 +126,23 @@ add_custom_command(
    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/TP${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/"
 )
 
+# Copy shader files and other assets to build directory
+add_custom_command(
+   TARGET TP POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy_directory
+   "${CMAKE_SOURCE_DIR}/src/Assets"
+   "${CMAKE_CURRENT_BINARY_DIR}/Assets"
+)
+
 SOURCE_GROUP(common REGULAR_EXPRESSION ".*/common/.*" )
 SOURCE_GROUP(shaders REGULAR_EXPRESSION ".*/.*shader$" )
 
 if (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
-add_custom_command(
-   TARGET TP POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/TP${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/"
-)
+# Remove this duplicate command that was here before
+# add_custom_command(
+#    TARGET TP POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/TP${CMAKE_EXECUTABLE_SUFFIX}" "${CMAKE_CURRENT_BINARY_DIR}/"
+# )
 elseif (${CMAKE_GENERATOR} MATCHES "Xcode" )
-
+  # Add Xcode-specific commands here if needed
 endif (NOT ${CMAKE_GENERATOR} MATCHES "Xcode" )
