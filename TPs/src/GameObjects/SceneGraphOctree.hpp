@@ -62,7 +62,7 @@ private:
     int nbRenderedGameObjects = 0;
 
     int nbOfGameObjectsPerOctant = 20;
-    int depthMax = 20;
+    int depthMax = 14;
 
     int countObjectsRecursive(Octant* octant) const;
 

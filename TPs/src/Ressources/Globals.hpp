@@ -19,6 +19,6 @@ inline float angle = 0.;
 inline float zoom = 1.;
 
 inline bool frustumCulling = true;
-inline bool spacePartitionCulling = false;
+inline bool spacePartitionCulling = true;
 
 #endif

@@ -65,7 +65,6 @@ void checkGLError(const char* operation) {
     }
 }
 
-
 int main(void) {
     // Initialise GLFW
     if( !glfwInit() )
@@ -146,7 +145,7 @@ int main(void) {
     sun.collider = RessourceManager::getInstance().addCollider(sun.gameObjectId);
     sun.collider->aabb.fitToMesh(sphereMesh);
     sun.collider->showCollider = false;
-
+    sun.collider->aabb.updateWorldMinMax(sun.transformation.getLocalModelMatrix(0.0f));
 
     GameObject earth;
     earth.mesh = sphereMesh;
@@ -158,6 +157,7 @@ int main(void) {
     earth.collider = RessourceManager::getInstance().addCollider(earth.gameObjectId);
     earth.collider->aabb.fitToMesh(sphereMesh);
     earth.collider->showCollider = false;
+    earth.collider->aabb.updateWorldMinMax(earth.transformation.getLocalModelMatrix(0.0f));
 
 
     GameObject moon;
@@ -167,6 +167,7 @@ int main(void) {
     moon.transformation.scale = glm::vec3(0.25f, 0.25f, 0.25f);
     moon.collider = RessourceManager::getInstance().addCollider(moon.gameObjectId);
     moon.collider->aabb.fitToMesh(sphereMesh);
+    moon.collider->aabb.updateWorldMinMax(moon.transformation.getLocalModelMatrix(0.0f));
     moon.collider->showCollider = false;
 
     GameObject terrain;
@@ -177,6 +178,7 @@ int main(void) {
     terrain.collider = RessourceManager::getInstance().addCollider(terrain.gameObjectId);
     terrain.collider->aabb.fitToMesh(terrainMesh);
     terrain.collider->showCollider = false;
+    terrain.collider->aabb.updateWorldMinMax(terrain.transformation.getLocalModelMatrix(0.0f));
 
     earth.addChild(&moon);
     sun.addChild(&earth); 
