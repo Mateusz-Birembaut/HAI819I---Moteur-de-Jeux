@@ -6,9 +6,12 @@ void Transform::resetTransform() {
     eulerRot = { 0.0f, 0.0f, 0.0f };
     scale = { 1.0f, 1.0f, 1.0f };
     modelMatrix = glm::mat4(1.0f);
+    isStatic = false;
 }
 
+//TODO : fix growing aabb
 glm::mat4 Transform::getLocalModelMatrix(float deltaTime) {
+    
     if (continuouslyRotate.x) eulerRot.x += rotationSpeed * deltaTime;
     if (continuouslyRotate.y) eulerRot.y += rotationSpeed * deltaTime;
     if (continuouslyRotate.z) eulerRot.z += rotationSpeed * deltaTime;

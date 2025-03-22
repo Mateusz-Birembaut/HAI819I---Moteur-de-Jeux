@@ -61,6 +61,7 @@ public:
     void handleCameraInputs(float deltaTime, GLFWwindow* window);
     void sendMatricesToShader(GLuint programID, int windowWidth, int windowHeight);
     bool isInCameraView(GameObject * gameObject);
+    bool isInCameraView(AABB * aabb);
     void getCameraPlanes(glm::vec4 * planes);
     void updateMatrices(int windowWidth, int windowHeight);
     void drawFrustumPlanes();

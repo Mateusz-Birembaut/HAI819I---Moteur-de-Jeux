@@ -18,10 +18,12 @@ struct AABB {
 
     AABB();
 
-    bool checkCollision(const AABB& other);
+    bool contains(const AABB& other);
+    float overlapValue(AABB * other);
+    bool checkCollision(const AABB &other);
     void fitToMesh(Mesh* mesh);
     void draw(GLuint programID, const glm::mat4& modelMatrix);
-    void updateWorldMinMax(const glm::mat4& modelMatrix);
+    void updateWorldMinMax(const glm::mat4 & modelMatrix);
 };
 
 #endif

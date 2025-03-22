@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <unistd.h>
+#include <chrono>  // Add at the top with other includes
 
 class SceneRenderer {
 private:
@@ -42,6 +43,7 @@ public:
     bool setupFramebuffer(float width, float height, float scale);
     bool render(float deltaTime);
     void cleanup();
+
 };
 
 #endif

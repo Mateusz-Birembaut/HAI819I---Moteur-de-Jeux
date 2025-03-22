@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "SceneRenderer.hpp"
+#include "../GameObjects/SceneGraphOctree.hpp"
 #include "Camera.hpp"
 #include "../Ressources/Globals.hpp"
 
@@ -167,6 +168,8 @@ bool SceneRenderer::render(float deltaTime) {
             SceneGraph::getInstance().updateAll(deltaTime);
         }
         SceneGraph::getInstance().drawAll(programID);
+
+        //SceneGraphOctree::getInstance().draw(); doesn't work for now
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return true;

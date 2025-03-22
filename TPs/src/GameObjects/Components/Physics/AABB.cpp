@@ -1,6 +1,7 @@
 #include "AABB.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
+
 AABB::AABB() : min(-0.5f), max(0.5f) {}
 
 bool AABB::checkCollision(const AABB& other) {
@@ -89,7 +90,7 @@ void AABB::draw(GLuint programID, const glm::mat4& modelMatrix) {
     glDeleteBuffers(1, &vbo);
 }
 
-void AABB::updateWorldMinMax(const glm::mat4& modelMatrix) {
+void AABB::updateWorldMinMax(const glm::mat4 & modelMatrix) {  
     worldMin = glm::vec3(std::numeric_limits<float>::max());
     worldMax = glm::vec3(std::numeric_limits<float>::lowest());
 
@@ -114,5 +115,32 @@ void AABB::updateWorldMinMax(const glm::mat4& modelMatrix) {
         worldMax.x = std::max(worldMax.x, worldCorner.x);
         worldMax.y = std::max(worldMax.y, worldCorner.y);
         worldMax.z = std::max(worldMax.z, worldCorner.z);
+    } 
+}
+
+bool AABB::contains(const AABB& other){
+    if(worldMax.x < other.worldMax.x) return false;
+    if(worldMax.y < other.worldMax.y) return false;
+    if(worldMax.z < other.worldMax.z) return false;
+
+    if(worldMin.x > other.worldMin.x) return false;
+    if(worldMin.y > other.worldMin.y) return false;
+    if(worldMin.z > other.worldMin.z) return false;
+
+    return true;
+}
+
+float AABB::overlapValue(AABB * other){
+    if (!checkCollision(*other)){
+        return 0.0f;
     }
+
+    float xOverlap = std::max(worldMax.x, other->worldMax.x) - std::max(worldMin.x, other->worldMin.x);
+    float yOverlap = std::max(worldMax.y, other->worldMax.y) - std::max(worldMin.y, other->worldMin.y);
+    float zOverlap = std::max(worldMax.z, other->worldMax.z) - std::max(worldMin.z, other->worldMin.z);
+
+    float overlapVolume = xOverlap * yOverlap * zOverlap;
+    
+    return overlapVolume;
+
 }

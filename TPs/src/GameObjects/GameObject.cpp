@@ -23,18 +23,29 @@ void GameObject::addChild(GameObject* child) {
 }
 
 void GameObject::updateSelfAndChild(float deltaTime) {
-    if (parent)
-        transformation.modelMatrix = parent->transformation.modelMatrix * transformation.getLocalModelMatrix(deltaTime);
-    else
-        transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
+    bool toBeUpdated = true;
 
-    if (collider != nullptr){
-        collider->aabb.updateWorldMinMax(transformation.modelMatrix);
+    if (frustumCulling){
+        // do not update if object is static and is out of view 
+        if (!Camera::getInstance().isInCameraView(this) && transformation.isStatic) {
+            toBeUpdated = false;
+        }
     }
+    if(toBeUpdated){
+        transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
+        if (parent)
+            transformation.modelMatrix = parent->transformation.modelMatrix * transformation.modelMatrix;
+        else
+            transformation.modelMatrix = transformation.modelMatrix;
 
+        if (collider != nullptr){
+            collider->aabb.updateWorldMinMax(transformation.modelMatrix);
+        }
+    }
     for (auto&& child : children) {
         child->updateSelfAndChild(deltaTime);
     }
+    
 }
 
 void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
@@ -50,11 +61,7 @@ void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
         collider->drawCollider(shaderProgram, transformation.modelMatrix);
     }
 
-    if (mesh == nullptr) {
-        toBeDrawn = false;
-    }
-    
-    if (toBeDrawn) {
+    if (toBeDrawn && mesh != nullptr) {
         nbOfDraw++;
         GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 

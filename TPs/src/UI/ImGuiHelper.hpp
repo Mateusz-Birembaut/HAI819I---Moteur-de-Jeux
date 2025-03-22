@@ -66,45 +66,6 @@ bool Checkbox3(const char* label, bool* x, bool* y, bool* z) {
     return changed;
 }
 
-// Fonction récursive pour afficher un objet et ses enfants
-void displayGameObject(GameObject* obj, int id) {
-    // Créer un ID unique pour cet objet (pour éviter les collisions d'ID d'ImGui)
-    std::string objName = "Objet " + std::to_string(id);
-    
-    // Créer un nœud d'arbre
-    if (ImGui::TreeNode(objName.c_str())) {
-        // Afficher les propriétés de l'objet
-        ImGui::Text("Position: %.2f, %.2f, %.2f", 
-            obj->transformation.translation.x,
-            obj->transformation.translation.y,
-            obj->transformation.translation.z);
-        
-        ImGui::Text("Scale: %.2f, %.2f, %.2f", 
-            obj->transformation.scale.x,
-            obj->transformation.scale.y,
-            obj->transformation.scale.z);
-        
-        ImGui::Text("Rotation Speed: %.2f", obj->transformation.rotationSpeed);
-        
-        // Permettre l'édition de certaines propriétés
-        ImGui::SliderFloat3("Position", &obj->transformation.translation.x, -1000.0f, 1000.0f);
-        ImGui::SliderFloat("Rotation Speed", &obj->transformation.rotationSpeed, -100.0f, 100.0f);
-        
-        // Texture info
-        ImGui::Text("Has Texture: %s", (obj->texture != nullptr) ? "Yes" : "No");
-        
-        // Afficher les enfants récursivement
-        if (!obj->children.empty()) {
-            ImGui::Text("Children: %zu", obj->children.size());
-            
-            for (size_t i = 0; i < obj->children.size(); i++) {
-                displayGameObject(obj->children[i], id * 100 + i + 1);
-            }
-        }
-        
-        ImGui::TreePop();
-    }
-}
 
 // Fonction auxiliaire pour afficher les objets dans la hiérarchie
 void displayObjectInHierarchy(GameObject* obj, GameObject** selectedObject) {
@@ -137,11 +98,12 @@ void gameObjectTransformMenu(GameObject * selectedObject){
     if (ImGui::Button("Reset")) {
         selectedObject->transformation.resetTransform();
     }
+    ImGui::Checkbox("Is static (ex : decor, won't be updated if not in view)", &selectedObject->transformation.isStatic);
+    ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f);
     ImGui::DragFloat3("Position", &selectedObject->transformation.translation.x, 0.1f);
     ImGui::DragFloat3("Rotation", &selectedObject->transformation.eulerRot.x, 0.1f);
-    Checkbox3("Rotate continuously", &selectedObject->transformation.continuouslyRotate.x,&selectedObject->transformation.continuouslyRotate.y, &selectedObject->transformation.continuouslyRotate.z);
-    ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f);
     ImGui::SliderFloat("Rotation Speed", &selectedObject->transformation.rotationSpeed, -100.0f, 100.0f);
+    Checkbox3("Rotate continuously", &selectedObject->transformation.continuouslyRotate.x,&selectedObject->transformation.continuouslyRotate.y, &selectedObject->transformation.continuouslyRotate.z);
 }
 
 
@@ -433,12 +395,18 @@ void gameObjectColliderMenu(GameObject * selectedObject){
         if (selectedObject->collider->showCollider ?  ImGui::Button("Hide Collider") : ImGui::Button("Display Collider") ){
             selectedObject->collider->showCollider = !selectedObject->collider->showCollider;
         }
-        ImGui::DragFloat3("min", &selectedObject->collider->aabb.min.x, 0.1f);
-        ImGui::DragFloat3("max", &selectedObject->collider->aabb.max.x, 0.1f);
         ImGui::DragFloat3("world min", &selectedObject->collider->aabb.worldMin.x, 0.1f);
         ImGui::DragFloat3("world max", &selectedObject->collider->aabb.worldMax.x, 0.1f);
-        
+        ImGui::DragFloat3("min", &selectedObject->collider->aabb.min.x, 0.1f);
+        ImGui::DragFloat3("max", &selectedObject->collider->aabb.max.x, 0.1f);
 
+        if (ImGui::Button("Fit Collider to mesh")) {
+            if(selectedObject->mesh != nullptr){
+                selectedObject->collider->aabb.fitToMesh(selectedObject->mesh);
+            }
+            Console::getInstance().addLog("Collider resized around mesh");
+        }
+        ImGui::SameLine();
         if (ImGui::Button("Remove Collider")) {
             selectedObject->collider = nullptr;
             RessourceManager::getInstance().removeCollider(selectedObject->gameObjectId);

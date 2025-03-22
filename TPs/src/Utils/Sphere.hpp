@@ -30,8 +30,9 @@ class Sphere {
 
                     Vertex vertex;
                     vertex.position = SphericalCoordinatesToEuclidean( theta , phi );
-                    vertex.color = glm::vec3(0.0f, 0.0f, 0.0f); 
+
                     vertex.normal = vertex.position;
+                    vertex.color = vertex.normal; 
                     vertex.uv = {-u,-v}; 
                     
                     vertices.push_back(vertex);

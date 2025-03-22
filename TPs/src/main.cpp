@@ -34,6 +34,7 @@ using namespace glm;
 
 #include "GameObjects/GameObject.hpp"
 #include "GameObjects/SceneGraph.hpp"
+#include "GameObjects/SceneGraphOctree.hpp"
 #include "GameObjects/Components/Mesh.hpp"
 #include "GameObjects/Components/Texture.hpp"
 
@@ -127,9 +128,6 @@ int main(void) {
     /****************************************/
 
     // Create and load the textures
-
-    // TODO ajouter message d'erreur si la texture n'est pas chargée
-
     RessourceManager& ressourceManager = RessourceManager::getInstance();
 
     Texture* earthTexture = ressourceManager.addTexture("earth" ,"../src/Assets/Textures/earthTexture.jpg", false);
@@ -141,7 +139,7 @@ int main(void) {
 
     Mesh* terrainMesh = ressourceManager.addMesh("terrain");
     Terrain::create(*terrainMesh, 10,10);
-
+ 
     GameObject sun;
     sun.mesh = sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
@@ -177,23 +175,23 @@ int main(void) {
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
     terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
     terrain.collider = RessourceManager::getInstance().addCollider(terrain.gameObjectId);
-    terrain.collider->aabb.fitToMesh(sphereMesh);
+    terrain.collider->aabb.fitToMesh(terrainMesh);
     terrain.collider->showCollider = false;
 
     earth.addChild(&moon);
-    sun.addChild(&earth);
+    sun.addChild(&earth); 
 
     SceneGraph& sceneGraph = SceneGraph::getInstance();
 
     sceneGraph.addObject(&terrain);
-    sceneGraph.addObject(&sun); 
+    sceneGraph.addObject(&sun);  
 
 
     std::vector<GameObject> gameObjects;
-    for (size_t i = 0; i < 100; i+=2){
-        for (size_t j = 0; j < 100; j+=2)
+    for (size_t i = 0; i < 100; i+=3){
+        for (size_t j = 0; j < 100; j+=3)
         {
-            for (size_t k = 0; k < 100; k+=2)
+            for (size_t k = 0; k < 100; k+=3)
             {
                 GameObject newGameObject;
                 newGameObject.mesh = sphereMesh;
@@ -201,23 +199,25 @@ int main(void) {
                 newGameObject.transformation.scale = glm::vec3(0.2f, 0.2f, 0.2f);
                 newGameObject.collider = RessourceManager::getInstance().addCollider(newGameObject.gameObjectId);
                 newGameObject.collider->aabb.fitToMesh(sphereMesh);
-                newGameObject.collider->showCollider = true;
-                newGameObject.transformation.continuouslyRotate = glm::bvec3(false, false, false);
+                newGameObject.collider->showCollider = false;
                 newGameObject.texture = earthTexture;
+                newGameObject.transformation.isStatic = true;
                 gameObjects.push_back(newGameObject);
             }
         
         }
     }
 
-    for (size_t i = 0; i < gameObjects.size(); i++)
-    {
-        sceneGraph.addObject(&gameObjects[i]);
+
+    for (size_t i = 0; i < gameObjects.size(); i++){
+        gameObjects[i].collider->aabb.updateWorldMinMax(gameObjects[i].transformation.getLocalModelMatrix(0.0f));
+        if(!sceneGraph.addObject(&gameObjects[i])){
+            //std::cout << "impossible d'jouter" << std::endl;
+        };
     }
 
-    
- 
-
+    std::cout << "total de game objects : " << gameObjects.size() << std::endl;
+    std::cout << "total de game objects dans l'octree : " << SceneGraphOctree::getInstance().getObjectCount() << std::endl;
 
     // For speed computation
     //double lastTime = glfwGetTime();
@@ -251,7 +251,7 @@ int main(void) {
             }
 
         }
-        
+
         renderImGui();
 
         // Swap buffers

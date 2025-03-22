@@ -1,5 +1,6 @@
 #include "SceneGraph.hpp"
-
+#include "SceneGraphOctree.hpp"
+#include "../Ressources/Globals.hpp"
 
 SceneGraph::SceneGraph() {}
 
@@ -12,24 +13,52 @@ int SceneGraph::getNbRenderedGameObjects(){
     return nbRenderedGameObjects;
 }
 
-void SceneGraph::addObject(GameObject* object) {
-    if (!object) return;
+//add object to SceneGraph and Octree
+bool SceneGraph::addObject(GameObject* object) {
+    if (!object) return false;
 
     if (object->parent == nullptr) {
+        SceneGraphOctree & sceneGraphOctree = SceneGraphOctree::getInstance();
         rootObjects.push_back(object);
+        if(!sceneGraphOctree.addGameObject(sceneGraphOctree.getRoot(), object)){
+            std::cout << "Couldn't add to octree" << std::endl;
+            return false;
+        };
     }
+    return true;
 }
 
+/* 
 void SceneGraph::updateAll(float deltaTime) {
     for (size_t i = 0; i < rootObjects.size(); ++i) {
         rootObjects[i]->updateSelfAndChild(deltaTime);
     }
 }
+ */
+void SceneGraph::updateAll(float deltaTime) {
+    if (spacePartitionCulling) {
+        std::unordered_set<GameObject*> inFrustum = SceneGraphOctree::getInstance().getToBeDrawnGOs();
+        for(auto & go : inFrustum){
+            go->updateSelfAndChild(deltaTime);
+        }
+    } else {
+        for (size_t i = 0; i < rootObjects.size(); ++i) {
+            rootObjects[i]->updateSelfAndChild(deltaTime);
+        }
+    }
+}
 
 void SceneGraph::drawAll(GLuint shaderProgram) {
-    nbRenderedGameObjects=0;
-    for (size_t i = 0; i < rootObjects.size(); ++i) {
-        rootObjects[i]->drawSelfAndChild(shaderProgram, nbRenderedGameObjects);
+    nbRenderedGameObjects = 0;
+    if (spacePartitionCulling) {
+        std::unordered_set<GameObject*> inFrustum = SceneGraphOctree::getInstance().getToBeDrawnGOs();
+        for(auto & go : inFrustum){
+            go->drawSelfAndChild(shaderProgram, nbRenderedGameObjects);
+        }
+    } else {
+        for (size_t i = 0; i < rootObjects.size(); ++i) {
+            rootObjects[i]->drawSelfAndChild(shaderProgram, nbRenderedGameObjects);
+        }
     }
 }
 

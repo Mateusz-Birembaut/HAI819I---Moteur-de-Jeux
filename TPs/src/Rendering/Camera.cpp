@@ -234,6 +234,31 @@ bool Camera::isInCameraView(GameObject * gameObject) {
     return true;
 }
 
+bool Camera::isInCameraView(AABB * aabb) {
+    updateMatrices(lastWindowWidth, lastWindowHeight);
+
+    glm::vec4 planes[6];
+    getCameraPlanes(planes);
+
+
+    for(auto& plane : planes) {
+        glm::vec3 normal(plane.x, plane.y, plane.z);
+
+        // closest point of aabb to plane
+        glm::vec3 farthestPoint;
+        farthestPoint.x = (normal.x <= 0) ? aabb->worldMin.x : aabb->worldMax.x;
+        farthestPoint.y = (normal.y <= 0) ? aabb->worldMin.y : aabb->worldMax.y;
+        farthestPoint.z = (normal.z <= 0) ? aabb->worldMin.z : aabb->worldMax.z;
+
+        // we project the point on the normal, if the dot < 0, means is outside the frustum, we can return false
+        if (glm::dot(farthestPoint, normal ) + plane.w <= 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 void Camera::getCameraPlanes(glm::vec4 * planes){
  
     glm::vec4 col1(viewProjectionMatrix[0][0], viewProjectionMatrix[1][0], viewProjectionMatrix[2][0], viewProjectionMatrix[3][0]);

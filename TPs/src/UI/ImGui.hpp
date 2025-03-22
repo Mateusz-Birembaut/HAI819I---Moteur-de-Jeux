@@ -74,7 +74,8 @@ void renderImGui() {
         // Menu principal
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("Options")) {
-                if (frustumCulling ? ImGui::MenuItem("Desactiver Fustrum Culling") : ImGui::MenuItem("Activer Fustrum Culling")) { frustumCulling = !frustumCulling ;}
+                if (frustumCulling ? ImGui::MenuItem("Deactivate Fustrum Culling") : ImGui::MenuItem("Activate Fustrum Culling")) { frustumCulling = !frustumCulling ;}
+                if (spacePartitionCulling ? ImGui::MenuItem("Deactivate Space Partition") : ImGui::MenuItem("Activate Space Partition")) { spacePartitionCulling = !spacePartitionCulling ;}
                 ImGui::EndMenu();
             }
             ImGui::EndMenuBar();
@@ -122,6 +123,7 @@ void renderImGui() {
         ImGui::Text("Scene Objects");
         ImGui::SameLine(); 
         if (ImGui::Button(" + ")){
+            Console::getInstance().addLog("TODO : entity manager pour gerer le cycle de vie des gameObjects");
             SceneGraph::getInstance().addObject(new GameObject());
         };
         ImGui::Separator();
