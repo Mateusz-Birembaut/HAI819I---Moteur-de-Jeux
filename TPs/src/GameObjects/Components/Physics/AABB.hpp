@@ -14,7 +14,7 @@ struct AABB {
     glm::vec3 max;
     glm::vec3 worldMin;
     glm::vec3 worldMax;
-    glm::vec3 color = glm::vec3(1.0f, 0.0f, 0.0f);
+    bool show = false;
 
     AABB();
 

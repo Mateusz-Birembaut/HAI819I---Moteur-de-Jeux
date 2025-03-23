@@ -63,7 +63,7 @@ void AABB::draw(GLuint programID, const glm::mat4& modelMatrix) {
 
     // Set default color attribute (1) to your AABB color
     glDisableVertexAttribArray(1);
-    glVertexAttrib3f(1, color.x, color.y, color.z);
+    glVertexAttrib3f(1, 1, 0, 0);
 
     // Set default values for normal and UV attributes
     glDisableVertexAttribArray(2);
@@ -105,8 +105,9 @@ void AABB::updateWorldMinMax(const glm::mat4 & modelMatrix) {
         {max.x, max.y, max.z}
     };
 
+    glm::vec4 worldCorner;
     for (const auto& corner : corners) {
-        glm::vec4 worldCorner = modelMatrix * glm::vec4(corner, 1.0f);
+        worldCorner = modelMatrix * glm::vec4(corner, 1.0f);
 
         worldMin.x = std::min(worldMin.x, worldCorner.x);
         worldMin.y = std::min(worldMin.y, worldCorner.y);

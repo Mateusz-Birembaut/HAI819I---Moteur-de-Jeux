@@ -10,9 +10,9 @@ class Collider {
 public:
     AABB aabb;
     bool isTrigger = false;
-    bool showCollider = true;
 
     Collider();
+    
     void drawCollider(GLuint programID, const glm::mat4& modelMatrix);
 };
 

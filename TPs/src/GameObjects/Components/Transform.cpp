@@ -7,10 +7,14 @@ void Transform::resetTransform() {
     scale = { 1.0f, 1.0f, 1.0f };
     modelMatrix = glm::mat4(1.0f);
     isStatic = false;
+    isDirty = true;
 }
 
-//TODO : fix growing aabb
+
 glm::mat4 Transform::getLocalModelMatrix(float deltaTime) {
+    if (!isDirty && isStatic){
+        return modelMatrix;
+    } 
     
     if (continuouslyRotate.x) eulerRot.x += rotationSpeed * deltaTime;
     if (continuouslyRotate.y) eulerRot.y += rotationSpeed * deltaTime;
@@ -37,6 +41,11 @@ glm::mat4 Transform::getLocalModelMatrix(float deltaTime) {
     // Y * X * Z
     const glm::mat4 rotationMatrix = transformY * transformX * transformZ;
 
-    // translation * rotation * scale (also known as TRS matrix)
-    return glm::translate(glm::mat4(1.0f), translation) * rotationMatrix * glm::scale(glm::mat4(1.0f), scale);
+    modelMatrix = glm::translate(glm::mat4(1.0f), translation) * rotationMatrix * glm::scale(glm::mat4(1.0f), scale);
+
+    if (isStatic) {
+        isDirty = false;
+    }
+    
+    return modelMatrix;
 }

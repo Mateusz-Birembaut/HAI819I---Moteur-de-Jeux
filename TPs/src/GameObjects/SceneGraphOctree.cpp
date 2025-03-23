@@ -20,13 +20,13 @@ bool SceneGraphOctree::addGameObject(Octant * octant, GameObject * gameObject, i
         for (int i = 0; i < 8; ++i) {
             float overlap;
             for (size_t i = 0; i < 8; i++){
-                overlap = octant->children[i]->aabb.overlapValue(&gameObject->collider->aabb);
+                overlap = octant->children[i]->aabb.overlapValue(&gameObject->cullingAABB);
                 if ( overlap > 0 ){
                     return addGameObject(octant->children[i], gameObject, depth+1);
                 }
             }
 
-            if (octant->children[i]->contains(gameObject->collider->aabb)) {
+            if (octant->children[i]->contains(gameObject->cullingAABB)) {
 
             }
         }
@@ -43,7 +43,7 @@ bool SceneGraphOctree::addGameObject(Octant * octant, GameObject * gameObject, i
         divide(octant);  // Don't exit!
         float overlap;
         for (size_t i = 0; i < 8; i++){
-            overlap = octant->children[i]->aabb.overlapValue(&gameObject->collider->aabb);
+            overlap = octant->children[i]->aabb.overlapValue(&gameObject->cullingAABB);
             if ( overlap > 0 ){
                 return addGameObject(octant->children[i], gameObject, depth+1);
             }
@@ -89,14 +89,10 @@ bool SceneGraphOctree::divide(Octant * octant){
     //int compteur = 0;
     for (int j = 0; j < octant->gameObjects.size(); ++j) {
         GameObject* go = octant->gameObjects[j];
-        if (go->collider == nullptr){
-            Console::getInstance().addLog("Erreur ajout d'un gameObject sans collider");
-            return false;
-        }
         //std::cout << go->gameObjectId << std::endl;
 /*         for (int i = 0; i < 8; ++i) {
            
-            if (octant->children[i]->contains(go->collider->aabb)) {
+            if (octant->children[i]->contains(go->cullingAABB)) {
                 octant->children[i]->gameObjects.push_back(go);
                 //compteur ++;
                 break;
@@ -107,7 +103,7 @@ bool SceneGraphOctree::divide(Octant * octant){
 
         float overlap;
         for (size_t i = 0; i < 8; i++){
-            overlap = octant->children[i]->aabb.overlapValue(&go->collider->aabb);
+            overlap = octant->children[i]->aabb.overlapValue(&go->cullingAABB);
             if ( overlap > 0 ){
                 octant->children[i]->gameObjects.push_back(go);
             }

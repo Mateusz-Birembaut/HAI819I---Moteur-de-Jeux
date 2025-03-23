@@ -12,7 +12,6 @@
 #include "Components/Physics/Collider.hpp"
 
 
-
 // Forward declaration
 class Camera;
 
@@ -20,6 +19,7 @@ class GameObject {
 public:
     std::string gameObjectId;
     Transform transformation; 
+    AABB cullingAABB;
     GameObject* parent = nullptr;
     std::vector<GameObject*> children;
     Texture* texture;

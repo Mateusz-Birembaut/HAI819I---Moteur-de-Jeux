@@ -99,9 +99,9 @@ void gameObjectTransformMenu(GameObject * selectedObject){
         selectedObject->transformation.resetTransform();
     }
     ImGui::Checkbox("Is static (ex : decor, won't be updated if not in view)", &selectedObject->transformation.isStatic);
-    ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f);
-    ImGui::DragFloat3("Position", &selectedObject->transformation.translation.x, 0.1f);
-    ImGui::DragFloat3("Rotation", &selectedObject->transformation.eulerRot.x, 0.1f);
+    if (ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f)) selectedObject->transformation.isDirty = true;
+	if (ImGui::DragFloat3("Position", &selectedObject->transformation.translation.x, 0.1f) ) selectedObject->transformation.isDirty = true;
+    if (ImGui::DragFloat3("Rotation", &selectedObject->transformation.eulerRot.x, 0.1f) ) selectedObject->transformation.isDirty = true;
     ImGui::SliderFloat("Rotation Speed", &selectedObject->transformation.rotationSpeed, -100.0f, 100.0f);
     Checkbox3("Rotate continuously", &selectedObject->transformation.continuouslyRotate.x,&selectedObject->transformation.continuouslyRotate.y, &selectedObject->transformation.continuouslyRotate.z);
 }
@@ -178,6 +178,7 @@ void gameObjectMeshMenu(GameObject * selectedObject){
                         }else {
                             Sphere::create(*newMesh, sphereResolution[0], sphereResolution[1]);
                             selectedObject->mesh = newMesh;
+							selectedObject->cullingAABB.fitToMesh(newMesh);
                             Console::getInstance().addLog("Ajout du mesh");
                             showAddMeshModal = false;
                             isAddingNewMesh = false;
@@ -187,7 +188,7 @@ void gameObjectMeshMenu(GameObject * selectedObject){
                 }
 
                 if(selectedMeshType == 1){
-
+					Console::getInstance().addLog("TODO : ajouter la creation de terrains");
                 }
 
                 if (selectedMeshType == 2){
@@ -241,7 +242,6 @@ void gameObjectMeshMenu(GameObject * selectedObject){
                         }
                         
                         Mesh* nMesh = RessourceManager::getInstance().addMesh(meshName);
-                        //RessourceManager::getInstance().addMesh(meshName);
                         if (nMesh == nullptr){
                             Console::getInstance().addLog("Mesh not found");
                             return;
@@ -250,6 +250,7 @@ void gameObjectMeshMenu(GameObject * selectedObject){
                             nMesh->setIndexes(newMesh.getIndexes());
                             nMesh->createBuffers();
                             selectedObject->mesh = nMesh;
+							selectedObject->cullingAABB.fitToMesh(nMesh);
                             Console::getInstance().addLog("Ajout du mesh");
                             showAddMeshModal = false;
                             isAddingNewMesh = false;
@@ -387,13 +388,34 @@ void gameObjectTextureMenu(GameObject * selectedObject){
 }
 
 
+void gameObjectCullingAABBMenu(GameObject * selectedObject){
+    ImGui::Text("Culling AABB:");
+    ImGui::SameLine();
+	AABB * cullingAabb = &selectedObject->cullingAABB;
+    if (cullingAabb->show ?  ImGui::Button("Hide") : ImGui::Button("Display") ){
+        cullingAabb->show = !cullingAabb->show;
+    }
+    ImGui::DragFloat3("culling world min", &cullingAabb->worldMin.x, 0.1f);
+    ImGui::DragFloat3("culling world max", &cullingAabb->worldMax.x, 0.1f);
+    ImGui::DragFloat3("culling min", &cullingAabb->min.x, 0.1f);
+    ImGui::DragFloat3("culling max", &cullingAabb->max.x, 0.1f);
+
+    if (ImGui::Button("Fit culling AABB to mesh")) {
+        if(selectedObject->mesh != nullptr){
+            cullingAabb->fitToMesh(selectedObject->mesh);
+        }
+        Console::getInstance().addLog("Culling AABB resized around mesh");
+    }
+}
+
+
 void gameObjectColliderMenu(GameObject * selectedObject){
     bool hasCollider = selectedObject->collider != nullptr;
     if (hasCollider){
         ImGui::Text("Collider :");
         ImGui::SameLine();
-        if (selectedObject->collider->showCollider ?  ImGui::Button("Hide Collider") : ImGui::Button("Display Collider") ){
-            selectedObject->collider->showCollider = !selectedObject->collider->showCollider;
+        if (selectedObject->collider->aabb.show ?  ImGui::Button("Hide Collider") : ImGui::Button("Display Collider") ){
+            selectedObject->collider->aabb.show = !selectedObject->collider->aabb.show;
         }
         ImGui::DragFloat3("world min", &selectedObject->collider->aabb.worldMin.x, 0.1f);
         ImGui::DragFloat3("world max", &selectedObject->collider->aabb.worldMax.x, 0.1f);

@@ -138,14 +138,15 @@ int main(void) {
 
     Mesh* terrainMesh = ressourceManager.addMesh("terrain");
     Terrain::create(*terrainMesh, 10,10);
+
  
     GameObject sun;
     sun.mesh = sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
     sun.collider = RessourceManager::getInstance().addCollider(sun.gameObjectId);
     sun.collider->aabb.fitToMesh(sphereMesh);
-    sun.collider->showCollider = false;
     sun.collider->aabb.updateWorldMinMax(sun.transformation.getLocalModelMatrix(0.0f));
+    sun.cullingAABB.fitToMesh(sphereMesh);
 
     GameObject earth;
     earth.mesh = sphereMesh;
@@ -156,8 +157,8 @@ int main(void) {
     earth.transformation.continuouslyRotate = glm::bvec3(false, true, false);
     earth.collider = RessourceManager::getInstance().addCollider(earth.gameObjectId);
     earth.collider->aabb.fitToMesh(sphereMesh);
-    earth.collider->showCollider = false;
     earth.collider->aabb.updateWorldMinMax(earth.transformation.getLocalModelMatrix(0.0f));
+    earth.cullingAABB.fitToMesh(sphereMesh);
 
 
     GameObject moon;
@@ -168,17 +169,17 @@ int main(void) {
     moon.collider = RessourceManager::getInstance().addCollider(moon.gameObjectId);
     moon.collider->aabb.fitToMesh(sphereMesh);
     moon.collider->aabb.updateWorldMinMax(moon.transformation.getLocalModelMatrix(0.0f));
-    moon.collider->showCollider = false;
+    moon.cullingAABB.fitToMesh(sphereMesh);
 
     GameObject terrain;
     terrain.mesh = terrainMesh;
     terrain.texture = earthTexture;
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
     terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
+    terrain.cullingAABB.fitToMesh(terrainMesh); 
     terrain.collider = RessourceManager::getInstance().addCollider(terrain.gameObjectId);
     terrain.collider->aabb.fitToMesh(terrainMesh);
-    terrain.collider->showCollider = false;
-    terrain.collider->aabb.updateWorldMinMax(terrain.transformation.getLocalModelMatrix(0.0f));
+    terrain.collider->aabb.updateWorldMinMax(terrain.transformation.getLocalModelMatrix(0.0f)); 
 
     earth.addChild(&moon);
     sun.addChild(&earth); 
@@ -188,39 +189,33 @@ int main(void) {
     sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);  
 
-
+ 
     std::vector<GameObject> gameObjects;
     for (size_t i = 0; i < 100; i+=3){
-        for (size_t j = 0; j < 100; j+=3)
-        {
-            for (size_t k = 0; k < 100; k+=3)
-            {
+        for (size_t j = 0; j < 1; j+=3){
+            for (size_t k = 0; k < 100; k+=3){
                 GameObject newGameObject;
                 newGameObject.mesh = sphereMesh;
                 newGameObject.transformation.translation = glm::vec3(-50.0f + i, -50.0f + k, -50.0f + j); 
                 newGameObject.transformation.scale = glm::vec3(0.2f, 0.2f, 0.2f);
-                newGameObject.collider = RessourceManager::getInstance().addCollider(newGameObject.gameObjectId);
-                newGameObject.collider->aabb.fitToMesh(sphereMesh);
-                newGameObject.collider->showCollider = false;
+                newGameObject.cullingAABB.fitToMesh(sphereMesh);
                 newGameObject.texture = earthTexture;
                 newGameObject.transformation.isStatic = true;
-                gameObjects.push_back(newGameObject);
-            }
-        
+                gameObjects.push_back(newGameObject);       
+            }     
         }
     }
 
 
     for (size_t i = 0; i < gameObjects.size(); i++){
-        gameObjects[i].collider->aabb.updateWorldMinMax(gameObjects[i].transformation.getLocalModelMatrix(0.0f));
         if(!sceneGraph.addObject(&gameObjects[i])){
-            //std::cout << "impossible d'jouter" << std::endl;
+            std::cout << "impossible d'jouter" << std::endl;
         };
     }
-
+ 
     std::cout << "total de game objects : " << gameObjects.size() << std::endl;
     std::cout << "total de game objects dans l'octree : " << SceneGraphOctree::getInstance().getObjectCount() << std::endl;
-
+ 
     // For speed computation
     //double lastTime = glfwGetTime();
     //int nbFrames = 0;

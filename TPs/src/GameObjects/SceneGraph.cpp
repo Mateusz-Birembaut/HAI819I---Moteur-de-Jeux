@@ -19,6 +19,7 @@ bool SceneGraph::addObject(GameObject* object) {
 
     if (object->parent == nullptr) {
         SceneGraphOctree & sceneGraphOctree = SceneGraphOctree::getInstance();
+        object->cullingAABB.updateWorldMinMax(object->transformation.getLocalModelMatrix(0.1f));
         rootObjects.push_back(object);
         if(!sceneGraphOctree.addGameObject(sceneGraphOctree.getRoot(), object)){
             std::cout << "Couldn't add to octree" << std::endl;

@@ -122,9 +122,18 @@ void renderImGui() {
         SceneGraph& sceneGraph = SceneGraph::getInstance();
         ImGui::Text("Scene Objects");
         ImGui::SameLine(); 
+        if (ImGui::Button(" Unselect ")){
+            selectedObject = nullptr;
+        }
+        ImGui::SameLine(); 
         if (ImGui::Button(" + ")){
             Console::getInstance().addLog("TODO : entity manager pour gerer le cycle de vie des gameObjects");
-            SceneGraph::getInstance().addObject(new GameObject());
+            GameObject * go = new GameObject();
+            if (selectedObject != nullptr) {
+                go->parent = selectedObject;
+                go->parent->addChild(go);
+            }
+            SceneGraph::getInstance().addObject(go);
         };
         ImGui::Separator();
 
@@ -172,7 +181,7 @@ void renderImGui() {
             ImGui::Separator();
 
             gameObjectTransformMenu(selectedObject);
-
+            
             ImGui::Separator();
             ImGui::Text("Render");
 
@@ -184,6 +193,9 @@ void renderImGui() {
 
             gameObjectTextureMenu(selectedObject);
 
+            ImGui::Separator();
+
+            gameObjectCullingAABBMenu(selectedObject);
 
             ImGui::Separator();
 
@@ -212,8 +224,7 @@ void renderImGui() {
             if (sceneRenderer.getPauseAnimations() ? ImGui::Button("Animation Paused") : ImGui::Button("Animation Running")){
                 sceneRenderer.setPauseAnimations(!sceneRenderer.getPauseAnimations());
             }
-            //ImGui::InputInt("Framerate Cap", &ImGui::GetIO().Framerate, 1, 5);
-            
+
             // Calculer la taille disponible
             ImVec2 availableSize = ImGui::GetContentRegionAvail();
             

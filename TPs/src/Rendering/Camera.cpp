@@ -206,16 +206,12 @@ void Camera::sendMatricesToShader(GLuint programID, int windowWidth, int windowH
 }
 
 bool Camera::isInCameraView(GameObject * gameObject) {
-    if (gameObject->collider == nullptr) {
-        return false;
-    }
-
     updateMatrices(lastWindowWidth, lastWindowHeight);
 
     glm::vec4 planes[6];
     getCameraPlanes(planes);
 
-    AABB bb = gameObject->collider->aabb;
+    AABB bb = gameObject->cullingAABB;
 
     for(auto& plane : planes) {
         glm::vec3 normal(plane.x, plane.y, plane.z);

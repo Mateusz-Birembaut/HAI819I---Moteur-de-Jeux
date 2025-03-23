@@ -6,14 +6,16 @@
 #include "../Ressources/Globals.hpp"
 
 // Constructor implementation
-GameObject::GameObject() 
-    : gameObjectId(generateId()), 
-      parent(nullptr), 
-      texture(nullptr), 
-      mesh(nullptr), 
-      transformation(), 
-      collider(nullptr), 
-      rigidBody(nullptr) {}
+GameObject::GameObject() : 
+    gameObjectId(generateId()),
+    parent(nullptr),
+    texture(nullptr),
+    mesh(nullptr),
+    transformation(),
+    collider(nullptr),
+    rigidBody(nullptr),
+    cullingAABB(){}
+
 
 void GameObject::addChild(GameObject* child) {
     if (child) {
@@ -34,9 +36,11 @@ void GameObject::updateSelfAndChild(float deltaTime) {
     if(toBeUpdated){
         transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
         if (parent)
-            transformation.modelMatrix = parent->transformation.modelMatrix * transformation.modelMatrix;
+            transformation.modelMatrix = parent->transformation.getLocalModelMatrix(deltaTime) * transformation.modelMatrix;
         else
             transformation.modelMatrix = transformation.modelMatrix;
+
+        cullingAABB.updateWorldMinMax(transformation.modelMatrix);
 
         if (collider != nullptr){
             collider->aabb.updateWorldMinMax(transformation.modelMatrix);
@@ -57,28 +61,35 @@ void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
         }
     }
 
-    if (toBeDrawn && collider && collider->showCollider) {
-        collider->drawCollider(shaderProgram, transformation.modelMatrix);
-    }
-
-    if (toBeDrawn && mesh != nullptr) {
-        nbOfDraw++;
-        GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
-
-        GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
-    
-        if (texture != nullptr) {
-            glUniform1i(hasTextureLoc, 1);
-            texture->bind(GL_TEXTURE0);  
-            GLint textureLoc = glGetUniformLocation(shaderProgram, "u_texture");
-            glUniform1i(textureLoc, 0);  
-        } else {
-            glUniform1i(hasTextureLoc, 0);
+    // maybe add show culling box or smth
+    if (toBeDrawn){
+        if (collider && collider->aabb.show) {
+            collider->drawCollider(shaderProgram, transformation.modelMatrix);
         }
-
-        mesh->draw(shaderProgram); 
+        if (cullingAABB.show){
+            cullingAABB.draw(shaderProgram, transformation.modelMatrix);
+        }
+        
+        if (mesh != nullptr) {
+            nbOfDraw++;
+            GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
+    
+            GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
+        
+            if (texture != nullptr) {
+                glUniform1i(hasTextureLoc, 1);
+                texture->bind(GL_TEXTURE0);  
+                GLint textureLoc = glGetUniformLocation(shaderProgram, "u_texture");
+                glUniform1i(textureLoc, 0);  
+            } else {
+                glUniform1i(hasTextureLoc, 0);
+            }
+    
+            mesh->draw(shaderProgram); 
+        }
     }
+    
 
     for (auto&& child : children) {
         child->drawSelfAndChild(shaderProgram, nbOfDraw);
