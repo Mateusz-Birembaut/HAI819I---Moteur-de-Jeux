@@ -15,7 +15,6 @@ Octant * SceneGraphOctree::getRoot(){
 }
 
 bool SceneGraphOctree::addGameObject(Octant * octant, GameObject * gameObject, int depth){
-    // Non-leaf case: delegate to appropriate child
     if(!octant->isLeaf){
         for (int i = 0; i < 8; ++i) {
             float overlap;
@@ -25,22 +24,14 @@ bool SceneGraphOctree::addGameObject(Octant * octant, GameObject * gameObject, i
                     return addGameObject(octant->children[i], gameObject, depth+1);
                 }
             }
-
-            if (octant->children[i]->contains(gameObject->cullingAABB)) {
-
-            }
         }
-        // If no child contains it, add to parent
-        octant->gameObjects.push_back(gameObject);
-        return true;
     }
     
-    // Leaf case: add directly or divide if needed
     if (octant->gameObjects.size() + 1 < nbOfGameObjectsPerOctant || depth == depthMax){
         octant->gameObjects.push_back(gameObject);
         return true;
     } else {
-        divide(octant);  // Don't exit!
+        divide(octant); 
         float overlap;
         for (size_t i = 0; i < 8; i++){
             overlap = octant->children[i]->aabb.overlapValue(&gameObject->cullingAABB);
@@ -48,10 +39,8 @@ bool SceneGraphOctree::addGameObject(Octant * octant, GameObject * gameObject, i
                 return addGameObject(octant->children[i], gameObject, depth+1);
             }
         }
-        // Fallback if no child contains it
-        octant->gameObjects.push_back(gameObject);
-        return true;
     }
+    return false;
 }
 
 bool SceneGraphOctree::divide(Octant * octant){
@@ -79,11 +68,7 @@ bool SceneGraphOctree::divide(Octant * octant){
             child_max[2] = center[2];
 
         octant->children[i] = new Octant(child_min, child_max);
-        octant->children[i]->id = (octant->id << 3) | i; // id enfant = 3 bits du parent + 3 bits de l'enfant ()
-        if (octant->children[i]->isLeaf == false)
-        {
-            std::cout << "AAAAAAAAAAAAAAAAAa" << std::endl;
-        }
+        octant->children[i]->id = (octant->id << 3) | i; // child id  = 3 bits of parents + 3 bits of self
         
     }
     //int compteur = 0;
@@ -153,76 +138,46 @@ void SceneGraphOctree::getToBeDrawnGOsRecusrive(Octant* octant, std::unordered_s
     }
 }
 
-void SceneGraphOctree::drawOctant(Octant& octant) const {
-    glBegin(GL_LINES);
+std::unordered_set<GameObject*>  SceneGraphOctree::getToBeUpdatedGOs(){
+    Camera & camera = Camera::getInstance();
+    std::unordered_set<GameObject*>  toBeUpdated;
+    if(root->isLeaf){
+        //std::cout << root->isLeaf << std::endl;
+        if (camera.isInCameraView(&root->aabb)) {
+            for (size_t i = 0; i < root->gameObjects.size(); i++){
+                toBeUpdated.insert(root->gameObjects[i]);
+            }
+        }
+    }else {
+        for (size_t i = 0; i < 8; i++){
+            if (camera.isInCameraView(&root->children[i]->aabb)) {
+                getToBeUpdatedGOsRecusrive(root->children[i], toBeUpdated);
+            }
+        }
+    }
+    return toBeUpdated;
+}
 
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMin[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMin[1], octant.aabb.worldMin[2]);
-
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMin[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMax[1], octant.aabb.worldMin[2]);
-
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMin[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMin[1], octant.aabb.worldMax[2]);
-
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMax[1], octant.aabb.worldMax[2]);
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMax[1], octant.aabb.worldMax[2]);
-
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMax[1], octant.aabb.worldMax[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMin[1], octant.aabb.worldMax[2]);
-
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMax[1], octant.aabb.worldMax[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMax[1], octant.aabb.worldMin[2]);
-
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMax[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMax[1], octant.aabb.worldMin[2]);
-
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMax[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMax[1], octant.aabb.worldMax[2]);
-
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMin[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMax[1], octant.aabb.worldMin[2]);
-
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMin[1], octant.aabb.worldMin[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMin[1], octant.aabb.worldMax[2]);
-
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMin[1], octant.aabb.worldMax[2]);
-    glVertex3f(octant.aabb.worldMax[0], octant.aabb.worldMin[1], octant.aabb.worldMax[2]);
-
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMin[1], octant.aabb.worldMax[2]);
-    glVertex3f(octant.aabb.worldMin[0], octant.aabb.worldMax[1], octant.aabb.worldMax[2]);
-
-    glEnd();
-
-    if (!octant.isLeaf) {
-        for (int i = 0; i < 8; ++i) {
-            drawOctant(*octant.children[i]);
+void SceneGraphOctree::getToBeUpdatedGOsRecusrive(Octant* octant, std::unordered_set<GameObject*> & toBeUpdated){
+    Camera & camera = Camera::getInstance();
+    
+    if(octant->isLeaf){
+        if (camera.isInCameraView(&octant->aabb)) {
+            for (size_t i = 0; i < octant->gameObjects.size(); i++){
+                if (octant->gameObjects[i]->transformation.needsUpdate()){ // adds only the "static" objects, the other will be added to this even if not in view
+                    toBeUpdated.insert(octant->gameObjects[i]);
+                }
+            }
+        }
+    }else {
+        for (size_t i = 0; i < 8; i++){
+            if (camera.isInCameraView(&octant->children[i]->aabb)) {
+                getToBeUpdatedGOsRecusrive(octant->children[i], toBeUpdated);
+            }
         }
     }
 }
 
-void SceneGraphOctree::draw() const {
-    // Save current program
-    GLint currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    
-    // Disable shader program for immediate mode rendering
-    glUseProgram(0);
-    
-    // Set a bright color for the octree lines
-    glColor3f(0.0f, 1.0f, 0.0f);  // Bright green
-    
-    // Optional: Disable depth test to make octree always visible
-    GLboolean depthTest = glIsEnabled(GL_DEPTH_TEST);
-    glDisable(GL_DEPTH_TEST);
-    
-    // Draw the octree
-    drawOctant(*root);
-    
-    // Restore OpenGL state
-    if (depthTest) glEnable(GL_DEPTH_TEST);
-    glUseProgram(currentProgram);
-}
 
 int SceneGraphOctree::getObjectCount() const {
     if (!root) return 0;

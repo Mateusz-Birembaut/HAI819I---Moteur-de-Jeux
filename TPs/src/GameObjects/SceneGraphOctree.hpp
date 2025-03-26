@@ -70,6 +70,8 @@ private:
 
     void getToBeDrawnGOsRecusrive(Octant* octant, std::unordered_set<GameObject*> & toBeDrawn);
 
+    void getToBeUpdatedGOsRecusrive(Octant* octant, std::unordered_set<GameObject*> & toBeUpdated);
+
 public:
     static SceneGraphOctree& getInstance();
 
@@ -77,6 +79,8 @@ public:
     bool addGameObject(Octant * octant, GameObject* gameObject, int depth =0);
 
     std::unordered_set<GameObject*>  getToBeDrawnGOs();
+
+    std::unordered_set<GameObject*>  getToBeUpdatedGOs();
 
     void drawOctant(Octant &octant) const;
     void draw() const;

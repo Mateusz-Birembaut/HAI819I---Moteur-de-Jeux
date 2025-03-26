@@ -192,11 +192,13 @@ int main(void) {
 
     sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);  
-
+ 
+/* 
+    //SceneGraph& sceneGraph = SceneGraph::getInstance();
  
     std::vector<GameObject> gameObjects;
     for (size_t i = 0; i < 100; i+=3){
-        for (size_t j = 0; j < 1; j+= 3){
+        for (size_t j = 0; j < 100; j+= 3){
             for (size_t k = 0; k < 100; k+=3){
                 GameObject newGameObject;
                 newGameObject.mesh = sphereMesh;
@@ -218,6 +220,7 @@ int main(void) {
  
     std::cout << "total de game objects : " << gameObjects.size() << std::endl;
     std::cout << "total de game objects dans l'octree : " << SceneGraphOctree::getInstance().getObjectCount() << std::endl;
+  */
  
     // For speed computation
     //double lastTime = glfwGetTime();

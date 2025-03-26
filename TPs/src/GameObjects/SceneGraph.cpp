@@ -29,21 +29,9 @@ bool SceneGraph::addObject(GameObject* object) {
     return true;
 }
 
-/* 
 void SceneGraph::updateAll(float deltaTime) {
-    for (size_t i = 0; i < rootObjects.size(); ++i) {
-        rootObjects[i]->updateSelfAndChild(deltaTime);
-    }
-}
- */
-void SceneGraph::updateAll(float deltaTime) {
-    if (spacePartitionCulling) {
-        std::unordered_set<GameObject*> inFrustum = SceneGraphOctree::getInstance().getToBeDrawnGOs();
-        for(auto & go : inFrustum){
-            go->updateSelfAndChild(deltaTime);
-        }
-    } else {
-        for (size_t i = 0; i < rootObjects.size(); ++i) {
+    for (size_t i = 0; i < rootObjects.size(); i++){
+        if (rootObjects[i]->transformation.needsUpdate()){
             rootObjects[i]->updateSelfAndChild(deltaTime);
         }
     }

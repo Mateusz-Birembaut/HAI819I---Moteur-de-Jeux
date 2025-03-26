@@ -236,18 +236,17 @@ bool Camera::isInCameraView(AABB * aabb) {
     glm::vec4 planes[6];
     getCameraPlanes(planes);
 
-
+    // maybe do a classique for loop and unroll it 
     for(auto& plane : planes) {
         glm::vec3 normal(plane.x, plane.y, plane.z);
 
-        // closest point of aabb to plane
-        glm::vec3 farthestPoint;
-        farthestPoint.x = (normal.x <= 0) ? aabb->worldMin.x : aabb->worldMax.x;
-        farthestPoint.y = (normal.y <= 0) ? aabb->worldMin.y : aabb->worldMax.y;
-        farthestPoint.z = (normal.z <= 0) ? aabb->worldMin.z : aabb->worldMax.z;
+        glm::vec3 pointToTest;
+        pointToTest.x = (normal.x <= 0) ? aabb->worldMin.x : aabb->worldMax.x;
+        pointToTest.y = (normal.y <= 0) ? aabb->worldMin.y : aabb->worldMax.y;
+        pointToTest.z = (normal.z <= 0) ? aabb->worldMin.z : aabb->worldMax.z;
 
         // we project the point on the normal, if the dot < 0, means is outside the frustum, we can return false
-        if (glm::dot(farthestPoint, normal ) + plane.w <= 0) {
+        if (glm::dot(pointToTest, normal ) + plane.w <= 0) {
             return false;
         }
     }
