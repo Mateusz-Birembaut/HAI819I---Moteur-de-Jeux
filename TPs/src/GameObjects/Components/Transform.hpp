@@ -20,6 +20,7 @@ public:
     void resetTransform();
     glm::mat3 getRotation3x3() const;
     glm::mat4 getLocalModelMatrix(float deltaTime);
+    bool needsUpdate();
 };
 
 #endif

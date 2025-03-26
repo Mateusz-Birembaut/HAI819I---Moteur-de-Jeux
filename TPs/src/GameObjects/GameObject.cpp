@@ -25,29 +25,36 @@ void GameObject::addChild(GameObject* child) {
 }
 
 void GameObject::updateSelfAndChild(float deltaTime) {
-    transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
+    bool parentUpdated = false;
     bool toBeUpdated = true;
 
     if (frustumCulling){
-        // do not update if object is static and is out of view 
-        if (!Camera::getInstance().isInCameraView(this) && !transformation.isDirty) {
+        // if not in view et is not dirty, do not update 
+        if (!Camera::getInstance().isInCameraView(this) && !transformation.needsUpdate()) {
             toBeUpdated = false;
         }
     }
+    
     if(toBeUpdated){
-        if (parent)
+        transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
+        
+        if (parent) {
             transformation.modelMatrix = parent->transformation.modelMatrix * transformation.modelMatrix;
+        }
+        
         cullingAABB.updateWorldMinMax(transformation.modelMatrix);
 
         if (collider != nullptr){
             collider->aabb.updateWorldMinMax(transformation.modelMatrix);
         }
-        transformation.isDirty = false;
-    }
-    for (auto&& child : children) {
-        child->updateSelfAndChild(deltaTime);
     }
     
+    for (auto&& child : children) {
+        if (toBeUpdated) {
+            child->transformation.isDirty = true;
+        }
+        child->updateSelfAndChild(deltaTime);
+    }
 }
 
 void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {

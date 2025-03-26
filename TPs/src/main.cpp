@@ -196,7 +196,7 @@ int main(void) {
  
     std::vector<GameObject> gameObjects;
     for (size_t i = 0; i < 100; i+=3){
-        for (size_t j = 0; j < 100; j+=3){
+        for (size_t j = 0; j < 1; j+= 3){
             for (size_t k = 0; k < 100; k+=3){
                 GameObject newGameObject;
                 newGameObject.mesh = sphereMesh;
