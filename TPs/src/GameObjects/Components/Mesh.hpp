@@ -20,10 +20,14 @@ public:
     ~Mesh();
 
     std::vector<Vertex> getVertices();
-    std::vector<unsigned short> getIndexes();
     void setVertices(std::vector<Vertex> _vertices);
+
+    std::vector<unsigned short> getIndexes();
     void setIndexes(std::vector<unsigned short> _indexes);
+
     void draw(GLuint shaderProgram);
+
+    /// @brief create the VAO, VBO and EBO for the mesh using Vertex structure ()
     void createBuffers();
 };
 

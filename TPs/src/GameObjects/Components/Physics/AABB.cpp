@@ -4,6 +4,7 @@
 
 AABB::AABB() : min(-0.5f), max(0.5f) {}
 
+
 bool AABB::checkCollision(const AABB& other) {
     if (worldMax.x < other.worldMin.x || worldMin.x > other.worldMax.x) return false;
     if (worldMax.y < other.worldMin.y || worldMin.y > other.worldMax.y) return false;
@@ -21,8 +22,9 @@ void AABB::fitToMesh(Mesh* mesh) {
     }
 }
 
+
 void AABB::draw(GLuint programID, const glm::mat4& modelMatrix) {
-    // Créer les 8 sommets de la boîte
+    // All the corners :
     std::vector<glm::vec3> corners = {
         {worldMin.x, worldMin.y, worldMin.z},
         {worldMax.x, worldMin.y, worldMin.z},
@@ -34,19 +36,18 @@ void AABB::draw(GLuint programID, const glm::mat4& modelMatrix) {
         {worldMax.x, worldMax.y, worldMax.z}
     };
 
-    // Définir les arêtes
     std::vector<std::pair<int, int>> edges = {
-        {0, 1}, {1, 3}, {3, 2}, {2, 0}, // Face du bas
-        {4, 5}, {5, 7}, {7, 6}, {6, 4}, // Face du haut
-        {0, 4}, {1, 5}, {2, 6}, {3, 7}  // Arêtes verticales
+        {0, 1}, {1, 3}, {3, 2}, {2, 0}, // Down face
+        {4, 5}, {5, 7}, {7, 6}, {6, 4}, // Up Face
+        {0, 4}, {1, 5}, {2, 6}, {3, 7}  // Vertical faces
     };
 
-    // Create simple vertices with only position
     std::vector<glm::vec3> positions;
     for (const auto& edge : edges) {
         positions.push_back(corners[edge.first]);
         positions.push_back(corners[edge.second]);
     }
+
 
     // Create VAO and VBO
     GLuint vao, vbo;
@@ -57,38 +58,35 @@ void AABB::draw(GLuint programID, const glm::mat4& modelMatrix) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(glm::vec3), positions.data(), GL_STATIC_DRAW);
 
-    // Position attribute (0)
+
+    // Setring default values for the shader
+
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void*)0);
 
-    // Set default color attribute (1) to your AABB color
     glDisableVertexAttribArray(1);
     glVertexAttrib3f(1, 1, 0, 0);
 
-    // Set default values for normal and UV attributes
     glDisableVertexAttribArray(2);
-    glVertexAttrib3f(2, 0.0f, 1.0f, 0.0f); // Default normal
+    glVertexAttrib3f(2, 0.0f, 1.0f, 0.0f); 
 
     glDisableVertexAttribArray(3);
-    glVertexAttrib2f(3, 0.0f, 0.0f); // Default UV
+    glVertexAttrib2f(3, 0.0f, 0.0f); 
 
-    // Set model matrix
     GLint modelLoc = glGetUniformLocation(programID, "u_model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
 
-    // Disable textures for this draw call
     GLint hasTextureLoc = glGetUniformLocation(programID, "u_hasTexture");
     if (hasTextureLoc != -1) {
-        glUniform1i(hasTextureLoc, 0); // No texture
+        glUniform1i(hasTextureLoc, 0); 
     }
 
-    // Draw lines
     glDrawArrays(GL_LINES, 0, positions.size());
 
-    // Clean up
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
 }
+
 
 void AABB::updateWorldMinMax(const glm::mat4 & modelMatrix) {  
     worldMin = glm::vec3(std::numeric_limits<float>::max());
@@ -119,6 +117,7 @@ void AABB::updateWorldMinMax(const glm::mat4 & modelMatrix) {
     } 
 }
 
+
 bool AABB::contains(const AABB& other){
     if(worldMax.x < other.worldMax.x) return false;
     if(worldMax.y < other.worldMax.y) return false;
@@ -130,6 +129,7 @@ bool AABB::contains(const AABB& other){
 
     return true;
 }
+
 
 float AABB::overlapValue(AABB * other){
     if (!checkCollision(*other)){

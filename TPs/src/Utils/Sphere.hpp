@@ -3,6 +3,9 @@
 
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
+#include <limits>
+
+#include "../../common/Conversion.hpp"
 
 #include "../Ressources/Structs.hpp"
 #include "../GameObjects/Components/Mesh.hpp"
@@ -11,10 +14,6 @@ class Sphere {
 
 
     public:
-
-        static glm::vec3 SphericalCoordinatesToEuclidean( float theta , float phi ) {
-            return glm::vec3( cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));
-        }
 
         static void create(Mesh & mesh, int nTheta, int nPhi) {
             std::vector<Vertex> vertices;
@@ -31,9 +30,13 @@ class Sphere {
                     Vertex vertex;
                     vertex.position = SphericalCoordinatesToEuclidean( theta , phi );
 
-                    vertex.normal = vertex.position;
-                    vertex.color = vertex.normal; 
-                    vertex.uv = {-u,-v}; 
+                    vertex.position = SphericalCoordinatesToEuclidean(theta, phi);
+
+
+                    vertex.pitchYaw[0] = static_cast<unsigned short>(65535.0f * v); 
+                    vertex.pitchYaw[1] =   static_cast<unsigned short>(65535.0f * u); 
+                    //std::cout <<" Pitch : " << vertex.pitchYaw[0] << " Yaw :  " << vertex.pitchYaw[1] << std::endl;
+                    vertex.uv = {-u,-v}; // flip to be in the correct orientation
                     
                     vertices.push_back(vertex);
 

@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 
+#include "Conversion.hpp"
 #include "objloader.hpp"
 
 #include "../src/Ressources/Structs.hpp"
@@ -24,12 +25,9 @@
 // - More secure. Change another line and you can inject code.
 // - Loading from memory, stream, etc
 
-/* struct Vertex{ 
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::vec3 normal;
-    glm::vec2 uv;
-}; */
+
+
+
 
 bool loadOBJ(const std::string & path, Mesh & mesh) {
 
@@ -107,9 +105,8 @@ bool loadOBJ(const std::string & path, Mesh & mesh) {
         // Créer le Vertex et l'ajouter au Mesh
         Vertex vertex;
         vertex.position = position;
-        vertex.normal = normal;
+        normalToUnsignedShort(normal, vertex.pitchYaw[0], vertex.pitchYaw[1]);
         vertex.uv = uv;
-        vertex.color = glm::vec3(1.0f, 1.0f, 1.0f); // Couleur par défaut
         
         vertices.push_back(vertex);
         indices.push_back(i);
@@ -229,8 +226,7 @@ bool loadOFF(const std::string & filename, Mesh & mesh) {
         
         Vertex vertex;
         vertex.position = vertices[idx];
-        vertex.normal = normals[idx];
-        vertex.color = glm::vec3(1.0f, 1.0f, 1.0f); // Couleur par défaut
+        normalToUnsignedShort(normals[idx], vertex.pitchYaw[0], vertex.pitchYaw[1]);
         vertex.uv = glm::vec2(0.0f, 0.0f);          // UV par défaut
         
         vertices_mesh.push_back(vertex);

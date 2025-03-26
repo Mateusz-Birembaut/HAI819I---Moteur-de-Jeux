@@ -11,10 +11,6 @@
 #include "Components/Physics/RigidBody.hpp"
 #include "Components/Physics/Collider.hpp"
 
-
-// Forward declaration
-class Camera;
-
 class GameObject {
 public:
     std::string gameObjectId;

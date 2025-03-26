@@ -46,7 +46,7 @@ using namespace glm;
 
 #include "UI/ImGui.hpp"
 
-
+#include "../common/Conversion.hpp"
 
 
 
@@ -131,6 +131,7 @@ int main(void) {
 
     Texture* earthTexture = ressourceManager.addTexture("earth" ,"../src/Assets/Textures/earthTexture.jpg", false);
     Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", false);
+    Texture* sunTexture = ressourceManager.addTexture("sun" ,"../src/Assets/Textures/sunTexture.jpg", false);
     Texture* damierTexture = ressourceManager.addTexture("damier" ,"../src/Assets/Textures/damier.jpg", false);
 
     Mesh* sphereMesh = ressourceManager.addMesh("sphere");
@@ -143,6 +144,9 @@ int main(void) {
     GameObject sun;
     sun.mesh = sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
+    sun.transformation.continuouslyRotate = glm::bvec3(false, true, false);
+    sun.transformation.rotationSpeed = 5;
+    sun.texture = sunTexture;
     sun.collider = RessourceManager::getInstance().addCollider(sun.gameObjectId);
     sun.collider->aabb.fitToMesh(sphereMesh);
     sun.collider->aabb.updateWorldMinMax(sun.transformation.getLocalModelMatrix(0.0f));
@@ -173,7 +177,7 @@ int main(void) {
 
     GameObject terrain;
     terrain.mesh = terrainMesh;
-    terrain.texture = earthTexture;
+    terrain.texture = damierTexture;
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
     terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
     terrain.cullingAABB.fitToMesh(terrainMesh); 
@@ -192,7 +196,7 @@ int main(void) {
  
     std::vector<GameObject> gameObjects;
     for (size_t i = 0; i < 100; i+=3){
-        for (size_t j = 0; j < 1; j+=3){
+        for (size_t j = 0; j < 100; j+=3){
             for (size_t k = 0; k < 100; k+=3){
                 GameObject newGameObject;
                 newGameObject.mesh = sphereMesh;
@@ -200,7 +204,6 @@ int main(void) {
                 newGameObject.transformation.scale = glm::vec3(0.2f, 0.2f, 0.2f);
                 newGameObject.cullingAABB.fitToMesh(sphereMesh);
                 newGameObject.texture = earthTexture;
-                newGameObject.transformation.isStatic = true;
                 gameObjects.push_back(newGameObject);       
             }     
         }

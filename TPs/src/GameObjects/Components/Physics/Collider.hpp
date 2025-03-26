@@ -13,6 +13,9 @@ public:
 
     Collider();
     
+    /// @brief Draws collider, only calls
+    /// @param programID 
+    /// @param modelMatrix 
     void drawCollider(GLuint programID, const glm::mat4& modelMatrix);
 };
 

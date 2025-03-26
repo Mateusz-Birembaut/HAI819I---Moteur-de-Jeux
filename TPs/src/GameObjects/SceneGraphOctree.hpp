@@ -13,7 +13,7 @@ struct Octant {
     Octant *children[8]; // adresse des fils
     bool isLeaf = true; // est-ce une feuille
 
-    unsigned long long id; // id unique de l'octant
+    uint64_t id; // id unique de l'octant
 
     bool contains(const AABB & otherAABB) { // 
         return aabb.contains(otherAABB);

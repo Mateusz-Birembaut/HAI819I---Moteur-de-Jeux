@@ -3,7 +3,6 @@
 // Ouput data
 out vec4 color;
 
-in vec3 fragColor;
 in vec4 fragPosition;
 in vec2 fragUV;
 in vec3 fragNormal;
@@ -19,6 +18,6 @@ void main(){
         color = texture(u_texture, fragUV);
     }
     else {
-        color = vec4(fragColor, 1.0);
+        color = vec4(fragNormal,1.0);
     }
 }

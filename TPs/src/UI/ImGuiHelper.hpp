@@ -98,7 +98,7 @@ void gameObjectTransformMenu(GameObject * selectedObject){
     if (ImGui::Button("Reset")) {
         selectedObject->transformation.resetTransform();
     }
-    ImGui::Checkbox("Is static (ex : decor, won't be updated if not in view)", &selectedObject->transformation.isStatic);
+
     if (ImGui::DragFloat3("Scale", &selectedObject->transformation.scale.x, 0.1f)) selectedObject->transformation.isDirty = true;
 	if (ImGui::DragFloat3("Position", &selectedObject->transformation.translation.x, 0.1f) ) selectedObject->transformation.isDirty = true;
     if (ImGui::DragFloat3("Rotation", &selectedObject->transformation.eulerRot.x, 0.1f) ) selectedObject->transformation.isDirty = true;

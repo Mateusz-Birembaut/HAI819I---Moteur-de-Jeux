@@ -9,7 +9,6 @@
 class Transform {
 public:
     float rotationSpeed;
-    bool isStatic = false;
     bool isDirty= true;
     
     glm::bvec3 continuouslyRotate = { false, false, false };

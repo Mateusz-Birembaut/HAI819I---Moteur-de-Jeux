@@ -25,26 +25,24 @@ void GameObject::addChild(GameObject* child) {
 }
 
 void GameObject::updateSelfAndChild(float deltaTime) {
+    transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
     bool toBeUpdated = true;
 
     if (frustumCulling){
         // do not update if object is static and is out of view 
-        if (!Camera::getInstance().isInCameraView(this) && transformation.isStatic) {
+        if (!Camera::getInstance().isInCameraView(this) && !transformation.isDirty) {
             toBeUpdated = false;
         }
     }
     if(toBeUpdated){
-        transformation.modelMatrix = transformation.getLocalModelMatrix(deltaTime);
         if (parent)
-            transformation.modelMatrix = parent->transformation.getLocalModelMatrix(deltaTime) * transformation.modelMatrix;
-        else
-            transformation.modelMatrix = transformation.modelMatrix;
-
+            transformation.modelMatrix = parent->transformation.modelMatrix * transformation.modelMatrix;
         cullingAABB.updateWorldMinMax(transformation.modelMatrix);
 
         if (collider != nullptr){
             collider->aabb.updateWorldMinMax(transformation.modelMatrix);
         }
+        transformation.isDirty = false;
     }
     for (auto&& child : children) {
         child->updateSelfAndChild(deltaTime);
@@ -61,7 +59,6 @@ void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
         }
     }
 
-    // maybe add show culling box or smth
     if (toBeDrawn){
         if (collider && collider->aabb.show) {
             collider->drawCollider(shaderProgram, transformation.modelMatrix);

@@ -28,7 +28,7 @@ void Mesh::draw(GLuint shaderProgram) {
     glDrawElements(GL_TRIANGLES, indexes.size(), GL_UNSIGNED_SHORT, 0);
     glBindVertexArray(0);
 }
-
+/* 
 void Mesh::createBuffers() {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -49,6 +49,30 @@ void Mesh::createBuffers() {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) * 3)); // uv
     glEnableVertexAttribArray(3);
+
+    glBindVertexArray(0);
+}
+ */
+
+ void Mesh::createBuffers() {
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexes.size() * sizeof(unsigned short), &indexes[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3))); // uv
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2))); // normal (pitch Yaw)
+    glEnableVertexAttribArray(2);
+
 
     glBindVertexArray(0);
 }
