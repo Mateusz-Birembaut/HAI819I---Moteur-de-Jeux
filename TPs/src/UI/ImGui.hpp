@@ -182,7 +182,7 @@ void renderImGui() {
             ImGui::Separator();
 
             if(ImGui::Button("FollowObject")) {
-                Camera::getInstance().
+                Console::getInstance()::addLog("follow object")
             };
 
             ImGui::Separator();
