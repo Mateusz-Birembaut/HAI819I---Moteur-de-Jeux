@@ -3,6 +3,7 @@
 
 #include "../Ressources/Structs.hpp"
 #include "../GameObjects/Components/Mesh.hpp"
+#include "../../common/Conversion.hpp"
 
 class Terrain {
 
@@ -24,8 +25,7 @@ class Terrain {
 
                     Vertex v;
                     v.position = glm::vec3(x, y, z);
-                    v.pitchYaw[0] = 0;
-                    v.pitchYaw[1] = 0;
+                    normalToUnsignedShort(glm::vec3(0.0f,1.0f,0.0f) , v.pitchYaw[0], v.pitchYaw[1]);
                     v.uv = glm::vec2(t_x , t_z);
 
                     vertices.push_back(v);

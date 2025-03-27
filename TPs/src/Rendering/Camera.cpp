@@ -205,7 +205,7 @@ void Camera::sendMatricesToShader(GLuint programID, int windowWidth, int windowH
     glUniformMatrix4fv(loc_transformations, 1, GL_FALSE, &modelMatrix[0][0]);
 }
 
-bool Camera::isInCameraView(GameObject * gameObject) {
+bool Camera::isInCameraView(GameObject * gameObject) { // add distance to camera then choose lod level accordingly ?
     updateMatrices(lastWindowWidth, lastWindowHeight);
 
     glm::vec4 planes[6];

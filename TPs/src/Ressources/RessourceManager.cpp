@@ -39,6 +39,42 @@ std::vector<const char*> RessourceManager::getTextureNames() {
     return textureNames;
 }
 
+Texture* RessourceManager::addHeightmap(std::string heightmapId, const char* path, bool flipVertically) {
+    auto it = heightmaps.find(heightmapId);
+    if (it != heightmaps.end()) {
+        return &it->second;
+    } else {
+        Texture heightmap(path, flipVertically);
+        bool testLoad = heightmap.load(true);
+        if (!testLoad) {
+            std::cout<< "texture not loaded returned null ptr";
+            return nullptr;
+        }
+        heightmaps.insert(std::pair<std::string, Texture>(heightmapId, heightmap));
+        Texture* tex = &heightmaps.find(heightmapId)->second;
+        tex->loadTexture(GL_REPEAT, GL_REPEAT, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+        return tex;
+    }
+}
+
+Texture* RessourceManager::getHeightmap(std::string heightmapId) {
+    auto it = heightmaps.find(heightmapId);
+    if (it != heightmaps.end()) {
+        return &it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+std::vector<const char*> RessourceManager::getHeightmapNames() {
+    std::vector<const char*> heightmapNames;
+    for (auto const& x : heightmaps) {
+        heightmapNames.push_back(x.first.c_str());
+    }
+    return heightmapNames;
+}
+
+
 Mesh* RessourceManager::addMesh(std::string meshId) {
     auto it = meshes.find(meshId);
     if (it != meshes.end()) {

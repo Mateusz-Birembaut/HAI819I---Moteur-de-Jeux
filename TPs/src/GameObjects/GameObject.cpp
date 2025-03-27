@@ -10,10 +10,12 @@ GameObject::GameObject() :
     gameObjectId(generateId()),
     parent(nullptr),
     texture(nullptr),
+    heightmap(nullptr),
     mesh(nullptr),
     transformation(),
     collider(nullptr),
     rigidBody(nullptr),
+    controller(nullptr),
     cullingAABB(){}
 
 
@@ -80,7 +82,8 @@ void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
     
             GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
-        
+            GLint hasHeightmapLoc = glGetUniformLocation(shaderProgram, "u_hasHeightmap");
+
             if (texture != nullptr) {
                 glUniform1i(hasTextureLoc, 1);
                 texture->bind(GL_TEXTURE0);  
@@ -88,6 +91,15 @@ void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
                 glUniform1i(textureLoc, 0);  
             } else {
                 glUniform1i(hasTextureLoc, 0);
+            }
+
+            if (heightmap != nullptr) {
+                glUniform1i(hasHeightmapLoc, 1);
+                heightmap->bind(GL_TEXTURE1);  
+                GLint heightmapLoc = glGetUniformLocation(shaderProgram, "u_heightmap");
+                glUniform1i(heightmapLoc, 1);  
+            } else {
+                glUniform1i(hasHeightmapLoc, 0);
             }
     
             mesh->draw(shaderProgram); 

@@ -23,9 +23,11 @@ void normalToUnsignedShort(const glm::vec3& normal, unsigned short& pitchBits, u
 
     float u = theta / (2.0f * M_PI);
     
-    pitchBits = static_cast<unsigned short>(65535.0f * v);
-    yawBits = static_cast<unsigned short>(65535.0f * u);
+    pitchBits = static_cast<unsigned short>(65534.99f * v );
+    yawBits   = static_cast<unsigned short>(65534.99f * u );
 }
+
+
 
 glm::vec3 SphericalCoordinatesToEuclidean( float theta , float phi ) {
     return glm::vec3( cos(theta) * cos(phi), sin(phi), sin(theta) * cos(phi));

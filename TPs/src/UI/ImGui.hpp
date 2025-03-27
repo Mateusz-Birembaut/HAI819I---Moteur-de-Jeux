@@ -178,6 +178,13 @@ void renderImGui() {
             if(ImGui::Button("Delete")) {
                 Console::getInstance().addLog("TODO : suppression object avec confirmation");
             };
+
+            ImGui::Separator();
+
+            if(ImGui::Button("FollowObject")) {
+                Camera::getInstance().
+            };
+
             ImGui::Separator();
 
             gameObjectTransformMenu(selectedObject);
@@ -192,6 +199,10 @@ void renderImGui() {
             ImGui::Separator();
 
             gameObjectTextureMenu(selectedObject);
+
+            ImGui::Separator();
+
+            gameObjectHeightmapMenu(selectedObject);
 
             ImGui::Separator();
 

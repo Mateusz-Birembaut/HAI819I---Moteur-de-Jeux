@@ -32,6 +32,10 @@ public:
     Mesh* getMesh(std::string meshId);
     std::vector<const char*> getMeshesNames();
 
+    Texture* addHeightmap(std::string heightmapId, const char* path, bool flipVertically);
+    Texture* getHeightmap(std::string heightmapId);
+    std::vector<const char*> getHeightmapNames();
+
     Collider* addCollider(std::string gameObjectId);
     bool removeCollider(std::string gameObjectId);
 
@@ -41,6 +45,7 @@ private:
     RessourceManager(){};
 
     std::map<std::string, Texture> textures;
+    std::map<std::string, Texture> heightmaps;
     std::map<std::string, Mesh> meshes;
     std::map<std::string, Collider> colliders;
     std::map<std::string, RigidBody> rigidbodys;

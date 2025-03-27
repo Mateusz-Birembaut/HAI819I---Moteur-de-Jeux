@@ -37,6 +37,7 @@ using namespace glm;
 #include "GameObjects/SceneGraphOctree.hpp"
 #include "GameObjects/Components/Mesh.hpp"
 #include "GameObjects/Components/Texture.hpp"
+#include "GameObjects/Components/Controller.hpp"
 
 #include "Utils/Terrain.hpp"
 #include "Utils/Sphere.hpp"
@@ -140,7 +141,10 @@ int main(void) {
     Mesh* terrainMesh = ressourceManager.addMesh("terrain");
     Terrain::create(*terrainMesh, 10,10);
 
- 
+    Texture* terrainHeightmap = ressourceManager.addHeightmap("terrain heightmap" ,"../src/Assets/Heightmaps/heightmap-1024x1024.png", false);
+
+    Controller c = Controller();
+
     GameObject sun;
     sun.mesh = sphereMesh;
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
@@ -151,6 +155,7 @@ int main(void) {
     sun.collider->aabb.fitToMesh(sphereMesh);
     sun.collider->aabb.updateWorldMinMax(sun.transformation.getLocalModelMatrix(0.0f));
     sun.cullingAABB.fitToMesh(sphereMesh);
+    sun.controller = &c;
 
     GameObject earth;
     earth.mesh = sphereMesh;
@@ -178,8 +183,9 @@ int main(void) {
     GameObject terrain;
     terrain.mesh = terrainMesh;
     terrain.texture = damierTexture;
+    terrain.heightmap = terrainHeightmap;
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
-    terrain.transformation.scale = glm::vec3(10.0f, 0.0f, 10.0f);
+    terrain.transformation.scale = glm::vec3(10.0f, 1.0f, 10.0f);
     terrain.cullingAABB.fitToMesh(terrainMesh); 
     terrain.collider = RessourceManager::getInstance().addCollider(terrain.gameObjectId);
     terrain.collider->aabb.fitToMesh(terrainMesh);
@@ -193,9 +199,9 @@ int main(void) {
     sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);  
  
-/* 
+
     //SceneGraph& sceneGraph = SceneGraph::getInstance();
- 
+/*  
     std::vector<GameObject> gameObjects;
     for (size_t i = 0; i < 100; i+=3){
         for (size_t j = 0; j < 100; j+= 3){
@@ -220,8 +226,8 @@ int main(void) {
  
     std::cout << "total de game objects : " << gameObjects.size() << std::endl;
     std::cout << "total de game objects dans l'octree : " << SceneGraphOctree::getInstance().getObjectCount() << std::endl;
+  
   */
- 
     // For speed computation
     //double lastTime = glfwGetTime();
     //int nbFrames = 0;
@@ -278,10 +284,10 @@ int main(void) {
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
-{
+void processInput(GLFWwindow *window){
     //terrain.handleInputs(window);
     Camera::getInstance().handleCameraInputs(deltaTime, window);
+    SceneGraph::getInstance().handleInputs(deltaTime, window);
 }
 
 

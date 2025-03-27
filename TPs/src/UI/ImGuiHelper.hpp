@@ -16,6 +16,9 @@
 bool showAddTextureModal = false;
 bool isAddingNewTexture = false;
 
+bool showAddHeightmapModal = false;
+bool isAddingNewHeightmap = false;
+
 bool showAddMeshModal = false;
 bool isAddingNewMesh = false;
 
@@ -387,6 +390,112 @@ void gameObjectTextureMenu(GameObject * selectedObject){
     }
 }
 
+void gameObjectHeightmapMenu(GameObject * selectedObject){
+    bool hasHeightmap = (selectedObject->heightmap != nullptr);
+    if (hasHeightmap){
+        ImGui::Text("Heightmap : %s", selectedObject->heightmap->getName());
+        if (ImGui::Button("Remove Heightmap")) {
+            selectedObject->heightmap = nullptr;
+            Console::getInstance().addLog("Suppression du lien entre l'objet et le heightmap");
+        }
+    }else {
+        ImGui::Text("No Heightmap");
+        ImGui::SameLine();
+        if (ImGui::Button("Add Heightmap")) {
+            showAddHeightmapModal = true;
+            ImGui::OpenPopup("Add Heightmap");
+        }
+
+        if (ImGui::BeginPopupModal("Add Heightmap", &showAddHeightmapModal, ImGuiWindowFlags_AlwaysAutoResize)){
+            if (!isAddingNewHeightmap) {
+                ImGui::Text("Select existing Heightmap to apply");
+                ImGui::Separator();
+
+                std::vector<const char*> existingHeightmapsNames = RessourceManager::getInstance().getHeightmapNames();
+                static int selectedHeightmap = 0;
+                if (existingHeightmapsNames.size() != 0){
+                    ImGui::ListBox("Existing Heightmaps", &selectedHeightmap, existingHeightmapsNames.data(), existingHeightmapsNames.size());
+                }
+
+                if (ImGui::Button("Valider")){
+                    Texture* newHeightmap = RessourceManager::getInstance().getHeightmap(existingHeightmapsNames[selectedHeightmap]);
+                    if (newHeightmap == nullptr){
+                        Console::getInstance().addLog("Heightmap not found");
+                        showAddHeightmapModal = false;
+                    }else {
+                        selectedObject->heightmap = newHeightmap;
+                        Console::getInstance().addLog("Ajout du heightmap");
+                        showAddHeightmapModal = false;
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")){
+                    showAddHeightmapModal = false;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Add a new heightmap")){
+                    isAddingNewHeightmap = true;
+                }
+            }else {
+                ImGui::Text("Creating a new heightmap");
+                ImGui::Separator();
+                static char heightmapName[256] = "";
+                static char heightmapPath[256] = "";
+                static bool flipHorizontal = false;
+    
+                ImVec2 minSize = ImVec2(700, 500);
+                ImVec2 maxSize = ImVec2(1200, 800);
+
+                ImGui::InputText("Heightmap Name ", heightmapName, IM_ARRAYSIZE(heightmapName));
+                ImGui::InputText("Heightmap Path ", heightmapPath, IM_ARRAYSIZE(heightmapPath));
+                ImGui::SameLine();
+
+                if (ImGui::Button("Browse...")) {
+                    ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose Heightmap File", 
+                        ".png,.jpg,.jpeg,.bmp,.tga", IGFD::FileDialogConfig());
+                }
+
+                if(ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey", ImGuiWindowFlags_NoCollapse, minSize, maxSize)){
+                    if (ImGuiFileDialog::Instance()->IsOk()){
+                        std::string filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                        strcpy(heightmapPath, filePathName.c_str());
+
+                        if (heightmapName[0] == '\0') {
+                            std::string fileName = ImGuiFileDialog::Instance()->GetCurrentFileName();
+                            strcpy(heightmapName, fileName.c_str());
+                        }
+                    }
+                    ImGuiFileDialog::Instance()->Close();
+                }
+
+                ImGui::Checkbox("Flip Horizontal", &flipHorizontal);
+    
+                if(ImGui::Button("Valider") && heightmapName[0] != '\0' && heightmapPath[0] != '\0'){
+                    Texture* newHeightmap = RessourceManager::getInstance().addHeightmap(heightmapName, heightmapPath, flipHorizontal);
+                    if (newHeightmap == nullptr){
+                        Console::getInstance().addLog("Heightmap not found");
+                    }else {
+                        selectedObject->heightmap = newHeightmap;
+                        Console::getInstance().addLog("Ajout du heightmap");
+                        showAddHeightmapModal = false;
+                        isAddingNewHeightmap = false;
+                        heightmapName[0] = '\0';
+                        heightmapPath[0] = '\0';
+                        flipHorizontal = false;
+                    }
+                } 
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel")){
+                    isAddingNewHeightmap = false;
+                    heightmapName[0] = '\0';
+                    heightmapPath[0] = '\0';
+                    flipHorizontal = false;
+                }           
+            }
+            ImGui::EndPopup();
+        }
+    }
+}
 
 void gameObjectCullingAABBMenu(GameObject * selectedObject){
     ImGui::Text("Culling AABB:");

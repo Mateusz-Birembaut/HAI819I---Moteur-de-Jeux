@@ -169,8 +169,6 @@ bool SceneRenderer::render(float deltaTime) {
         }
         SceneGraph::getInstance().drawAll(programID);
 
-        //SceneGraphOctree::getInstance().draw(); doesn't work for now
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return true;
     } catch (const std::exception& e) {

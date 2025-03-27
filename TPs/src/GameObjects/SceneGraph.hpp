@@ -25,6 +25,7 @@ public:
     void drawAll(GLuint shaderProgram);
     void clear();
     void getAllObjects(std::vector<GameObject*>& objects);
+    void handleInputs(float deltaTime, GLFWwindow *window);
     size_t size() const;
     GameObject* getObjectAt(size_t index);
 

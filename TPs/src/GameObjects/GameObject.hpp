@@ -10,6 +10,7 @@
 #include "Components/Texture.hpp"
 #include "Components/Physics/RigidBody.hpp"
 #include "Components/Physics/Collider.hpp"
+#include "Components/Controller.hpp"
 
 class GameObject {
 public:
@@ -19,9 +20,11 @@ public:
     GameObject* parent = nullptr;
     std::vector<GameObject*> children;
     Texture* texture;
+    Texture* heightmap;
     Mesh* mesh;
     RigidBody* rigidBody;
     Collider* collider;
+    Controller* controller;
 
     GameObject();
 
