@@ -1,6 +1,9 @@
+#include <GL/glew.h>
+
 #include "AABB.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../Mesh.hpp"
 
 AABB::AABB() : min(-0.5f), max(0.5f) {}
 
@@ -130,6 +133,17 @@ bool AABB::contains(const AABB& other){
     return true;
 }
 
+bool AABB::containsOrBelow(const glm::vec3& point){
+    if(worldMax.x < point.x) return false;
+    if(worldMax.z < point.z) return false;
+
+    if(worldMin.x > point.x) return false;
+    if(worldMin.y > point.y) return false;
+    if(worldMin.z > point.z) return false;
+
+    return true;
+}
+
 
 float AABB::overlapValue(AABB * other){
     if (!checkCollision(*other)){
@@ -145,3 +159,5 @@ float AABB::overlapValue(AABB * other){
     return overlapVolume;
 
 }
+
+

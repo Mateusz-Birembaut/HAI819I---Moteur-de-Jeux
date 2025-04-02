@@ -178,6 +178,39 @@ void SceneGraphOctree::getToBeUpdatedGOsRecusrive(Octant* octant, std::unordered
     }
 }
 
+std::unordered_set<GameObject*>  SceneGraphOctree::getObjectsBeneath(glm::vec3 position){
+    std::unordered_set<GameObject*> toBeChecked;
+    if(root->isLeaf){
+        if (root->aabb.containsOrBelow(position)){
+            for (size_t i = 0; i < root->gameObjects.size(); i++){
+                toBeChecked.insert(root->gameObjects[i]);
+            }
+        }
+    }else {
+        for (size_t i = 0; i < 8; i++){
+            if (root->aabb.containsOrBelow(position)) {
+                getObjectsBeneathRecusrive(root->children[i], position,toBeChecked);
+            }
+        }
+    }
+    return toBeChecked;
+}
+
+void SceneGraphOctree::getObjectsBeneathRecusrive(Octant* octant, glm::vec3 position, std::unordered_set<GameObject*> & toBeChecked){    
+    if(octant->isLeaf){
+        if (octant->aabb.containsOrBelow(position)){
+            for (size_t i = 0; i < root->gameObjects.size(); i++){
+                toBeChecked.insert(root->gameObjects[i]);
+            }
+        }
+    }else {
+        for (size_t i = 0; i < 8; i++){
+            if (octant->aabb.containsOrBelow(position)) {
+                getObjectsBeneathRecusrive(root->children[i], position, toBeChecked);
+            }
+        }
+    }
+}
 
 int SceneGraphOctree::getObjectCount() const {
     if (!root) return 0;

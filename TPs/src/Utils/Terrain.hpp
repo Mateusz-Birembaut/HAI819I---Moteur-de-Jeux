@@ -13,6 +13,9 @@ class Terrain {
             std::vector<Vertex> vertices;
             std::vector<unsigned short> indexes;
 
+            glm::vec3 minBounds(std::numeric_limits<float>::max());
+            glm::vec3 maxBounds(std::numeric_limits<float>::lowest());
+
             for (int i = 0; i < VertexCountX; i++) {
                 for (int j = 0; j < VertexCountZ; j++) {
                     float t_x = float(i) / float(VertexCountX - 1);
@@ -25,6 +28,16 @@ class Terrain {
 
                     Vertex v;
                     v.position = glm::vec3(x, y, z);
+
+                    minBounds.x = std::min(minBounds.x, x);
+                    minBounds.y = std::min(minBounds.y, y);
+                    minBounds.z = std::min(minBounds.z, z);
+                    
+                    maxBounds.x = std::max(maxBounds.x, x);
+                    maxBounds.y = std::max(maxBounds.y, y);
+                    maxBounds.z = std::max(maxBounds.z, z);
+                    
+
                     normalToUnsignedShort(glm::vec3(0.0f,1.0f,0.0f) , v.pitchYaw[0], v.pitchYaw[1]);
                     v.uv = glm::vec2(t_x , t_z);
 
@@ -51,6 +64,7 @@ class Terrain {
                 }
             }
 
+            mesh.setMinMaxBounds(minBounds, maxBounds);
             mesh.setVertices(vertices);
             mesh.setIndexes(indexes);
             mesh.createBuffers();

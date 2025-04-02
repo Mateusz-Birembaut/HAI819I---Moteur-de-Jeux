@@ -56,6 +56,8 @@ public:
     float getSpeed() const;
     CAMERA_CONTROL getCameraControl() const;
 
+    float getDistanceFrom(glm::vec3 position);
+
     void resetCamera();
     void orbit(float deltaTime, glm::vec3 orbit_center);
     void handleCameraInputs(float deltaTime, GLFWwindow* window);

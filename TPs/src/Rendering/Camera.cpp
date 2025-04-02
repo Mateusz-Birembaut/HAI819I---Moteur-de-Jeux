@@ -285,3 +285,7 @@ void Camera::updateMatrices(int windowWidth, int windowHeight) {
 
     matricesDirty = false;
 }
+
+float Camera::getDistanceFrom(glm::vec3 position){
+    return glm::distance(this->position, position);
+}

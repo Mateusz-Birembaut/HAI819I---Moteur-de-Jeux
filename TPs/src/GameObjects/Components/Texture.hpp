@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 #include <iostream>
+#include <glm/glm.hpp>  
 
 #define DEBUG_TEXTURE false
 
@@ -31,6 +32,7 @@ public:
     void bind(GLenum textureUnit = GL_TEXTURE0) const;
     GLuint getID() const;
     const char* getName() const;
+    float sampleTexture(float x, float z);
 };
 
 #endif

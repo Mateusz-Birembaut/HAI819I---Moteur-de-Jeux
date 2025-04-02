@@ -72,6 +72,9 @@ private:
 
     void getToBeUpdatedGOsRecusrive(Octant* octant, std::unordered_set<GameObject*> & toBeUpdated);
 
+
+    void getObjectsBeneathRecusrive(Octant* octant, glm::vec3 transformPosition,std::unordered_set<GameObject*> & toBeChecked);
+
 public:
     static SceneGraphOctree& getInstance();
 
@@ -82,6 +85,8 @@ public:
 
     std::unordered_set<GameObject*>  getToBeUpdatedGOs();
 
+    std::unordered_set<GameObject *> getObjectsBeneath(glm::vec3 transformPosition);
+    
     void drawOctant(Octant &octant) const;
     void draw() const;
 
@@ -89,6 +94,8 @@ public:
     
     int getObjectCount() const;
     
+
+
     //int getOctantIndex(GameObject* gameObject) maybe
     //int getOctantIndexRecursive(Octant &octant, GameObject* gameObject);
 };

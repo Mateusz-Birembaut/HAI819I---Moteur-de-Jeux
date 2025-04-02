@@ -75,7 +75,7 @@ GameObject* SceneGraph::getObjectAt(size_t index) {
 void SceneGraph::handleInputs(float deltaTime, GLFWwindow *window) {
     for (size_t i = 0; i < rootObjects.size(); i++){
         if (rootObjects[i]->controller){
-            rootObjects[i]->controller->handleInputs(deltaTime, window, &rootObjects[i]->transformation );
+            rootObjects[i]->controller->handleInputs(deltaTime, window, rootObjects[i] );
         }
     }
 }

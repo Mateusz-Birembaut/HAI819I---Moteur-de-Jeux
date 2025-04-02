@@ -7,10 +7,15 @@
 
 #include "Components/Transform.hpp"
 #include "Components/Mesh.hpp"
+#include "Components/Physics/AABB.hpp"
 #include "Components/Texture.hpp"
-#include "Components/Physics/RigidBody.hpp"
-#include "Components/Physics/Collider.hpp"
-#include "Components/Controller.hpp"
+#include "Components/Lods.hpp"
+
+class AABB;
+class RigidBody;
+class Collider;
+class Controller;
+
 
 class GameObject {
 public:
@@ -25,6 +30,7 @@ public:
     RigidBody* rigidBody;
     Collider* collider;
     Controller* controller;
+    Lods* lods;
 
     GameObject();
 

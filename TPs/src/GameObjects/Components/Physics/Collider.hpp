@@ -2,9 +2,9 @@
 #define COLLIDER_HPP
 
 #include <GL/glew.h>
-#include "AABB.hpp"
 #include <glm/glm.hpp>
 
+#include "AABB.hpp"
 
 class Collider {
 public:

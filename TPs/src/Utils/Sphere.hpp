@@ -20,6 +20,9 @@ class Sphere {
             std::vector<Vertex> vertices;
             std::vector<unsigned short> indexes;
 
+            glm::vec3 minBounds(std::numeric_limits<float>::max());
+            glm::vec3 maxBounds(std::numeric_limits<float>::lowest());
+
             for( unsigned int thetaIt = 0 ; thetaIt < nTheta ; ++thetaIt ) {
                 float u = (float)(thetaIt) / (float)(nTheta-1);
                 float theta = u * 2 * M_PI;
@@ -30,6 +33,14 @@ class Sphere {
 
                     Vertex vertex;
                     vertex.position = SphericalCoordinatesToEuclidean( theta , phi );
+
+                    minBounds.x = std::min(minBounds.x, vertex.position.x);
+                    minBounds.y = std::min(minBounds.y, vertex.position.y);
+                    minBounds.z = std::min(minBounds.z, vertex.position.z);
+                    
+                    maxBounds.x = std::max(maxBounds.x, vertex.position.x);
+                    maxBounds.y = std::max(maxBounds.y, vertex.position.y);
+                    maxBounds.z = std::max(maxBounds.z, vertex.position.z);
 
                     glm::vec3 normal = glm::normalize(vertex.position);
                     normalToUnsignedShort(normal , vertex.pitchYaw[0], vertex.pitchYaw[1]);
@@ -57,7 +68,7 @@ class Sphere {
                 }
             }
 
-
+            mesh.setMinMaxBounds(minBounds, maxBounds);
             mesh.setVertices(vertices);
             mesh.setIndexes(indexes);
             mesh.createBuffers();

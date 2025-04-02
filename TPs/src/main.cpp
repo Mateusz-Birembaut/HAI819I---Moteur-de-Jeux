@@ -134,12 +134,19 @@ int main(void) {
     Texture* moonTexture = ressourceManager.addTexture("moon" ,"../src/Assets/Textures/moonTexture.jpg", false);
     Texture* sunTexture = ressourceManager.addTexture("sun" ,"../src/Assets/Textures/sunTexture.jpg", false);
     Texture* damierTexture = ressourceManager.addTexture("damier" ,"../src/Assets/Textures/damier.jpg", false);
+    Texture* heightmapTexture = ressourceManager.addTexture("heightmapTexture" ,"../src/Assets/Heightmaps/heightmap-1024x1024.png", false);
 
-    Mesh* sphereMesh = ressourceManager.addMesh("sphere");
+    Mesh* sphereMesh = ressourceManager.addMesh("sphereLOD0");
     Sphere::create(*sphereMesh, 20,20);
 
+    Mesh* sphereLOD1 = ressourceManager.addMesh("sphereLOD1");
+    Sphere::create(*sphereLOD1, 8,8);
+
+    Mesh* sphereLOD2 = ressourceManager.addMesh("sphereLOD2");
+    Sphere::create(*sphereLOD2, 4,4);
+
     Mesh* terrainMesh = ressourceManager.addMesh("terrain");
-    Terrain::create(*terrainMesh, 10,10);
+    Terrain::create(*terrainMesh, 50,50);
 
     Texture* terrainHeightmap = ressourceManager.addHeightmap("terrain heightmap" ,"../src/Assets/Heightmaps/heightmap-1024x1024.png", false);
 
@@ -150,6 +157,7 @@ int main(void) {
     sun.transformation.translation = glm::vec3(0.0f, 0.0f, 0.0f); 
     sun.transformation.continuouslyRotate = glm::bvec3(false, true, false);
     sun.transformation.rotationSpeed = 5;
+    sun.transformation.scale = glm::vec3(.1f, .1f, .1f);
     sun.texture = sunTexture;
     sun.collider = RessourceManager::getInstance().addCollider(sun.gameObjectId);
     sun.collider->aabb.fitToMesh(sphereMesh);
@@ -158,7 +166,11 @@ int main(void) {
     sun.controller = &c;
 
     GameObject earth;
-    earth.mesh = sphereMesh;
+    earth.lods = new Lods();
+    //earth.mesh = sphereMesh;
+    earth.lods->addMesh(20, sphereMesh);
+    earth.lods->addMesh(30, sphereLOD1);
+    earth.lods->addMesh(50, sphereLOD2);
     earth.texture = earthTexture;
     earth.transformation.translation = glm::vec3(4.0f, 0.0f, 0.0f); 
     earth.transformation.scale = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -182,22 +194,23 @@ int main(void) {
 
     GameObject terrain;
     terrain.mesh = terrainMesh;
-    terrain.texture = damierTexture;
+    terrain.texture = heightmapTexture;
     terrain.heightmap = terrainHeightmap;
     terrain.transformation.translation = glm::vec3(0.0f, -3.0f, 0.0f);
-    terrain.transformation.scale = glm::vec3(10.0f, 1.0f, 10.0f);
+    terrain.transformation.scale = glm::vec3(20.0f, 1.0f, 20.0f);
     terrain.cullingAABB.fitToMesh(terrainMesh); 
     terrain.collider = RessourceManager::getInstance().addCollider(terrain.gameObjectId);
     terrain.collider->aabb.fitToMesh(terrainMesh);
     terrain.collider->aabb.updateWorldMinMax(terrain.transformation.getLocalModelMatrix(0.0f)); 
 
     earth.addChild(&moon);
-    sun.addChild(&earth); 
+    //sun.addChild(&earth); 
 
     SceneGraph& sceneGraph = SceneGraph::getInstance();
 
     sceneGraph.addObject(&terrain);
     sceneGraph.addObject(&sun);  
+    sceneGraph.addObject(&earth);
  
 
     //SceneGraph& sceneGraph = SceneGraph::getInstance();

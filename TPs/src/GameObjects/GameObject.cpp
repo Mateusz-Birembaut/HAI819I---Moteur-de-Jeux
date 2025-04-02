@@ -1,6 +1,11 @@
 #include <GL/glew.h>
 
 #include "GameObject.hpp"
+#include "Components/Physics/AABB.hpp"
+#include "Components/Physics/Collider.hpp"
+#include "Components/Physics/RigidBody.hpp"
+#include "Components/Controller.hpp"
+
 #include "../Rendering/Camera.hpp"
 #include "../Ressources/IdGenerator.hpp"
 #include "../Ressources/Globals.hpp"
@@ -16,6 +21,7 @@ GameObject::GameObject() :
     collider(nullptr),
     rigidBody(nullptr),
     controller(nullptr),
+    lods(nullptr),
     cullingAABB(){}
 
 
@@ -69,14 +75,48 @@ void GameObject::drawSelfAndChild(GLuint shaderProgram, int & nbOfDraw) {
     }
 
     if (toBeDrawn){
+
         if (collider && collider->aabb.show) {
             collider->drawCollider(shaderProgram, transformation.modelMatrix);
         }
+
         if (cullingAABB.show){
             cullingAABB.draw(shaderProgram, transformation.modelMatrix);
         }
-        
-        if (mesh != nullptr) {
+
+        if (lods != nullptr)
+        {
+            float distToCamera = Camera::getInstance().getDistanceFrom(transformation.translation);
+            Mesh* meshToDraw = lods->getMesh(distToCamera);
+            
+            nbOfDraw++;
+            GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 
+    
+            GLint hasTextureLoc = glGetUniformLocation(shaderProgram, "u_hasTexture");
+            GLint hasHeightmapLoc = glGetUniformLocation(shaderProgram, "u_hasHeightmap");
+
+            if (texture != nullptr) {
+                glUniform1i(hasTextureLoc, 1);
+                texture->bind(GL_TEXTURE0);  
+                GLint textureLoc = glGetUniformLocation(shaderProgram, "u_texture");
+                glUniform1i(textureLoc, 0);  
+            } else {
+                glUniform1i(hasTextureLoc, 0);
+            }
+
+            if (heightmap != nullptr) {
+                glUniform1i(hasHeightmapLoc, 1);
+                heightmap->bind(GL_TEXTURE1);  
+                GLint heightmapLoc = glGetUniformLocation(shaderProgram, "u_heightmap");
+                glUniform1i(heightmapLoc, 1);  
+            } else {
+                glUniform1i(hasHeightmapLoc, 0);
+            }
+    
+            meshToDraw->draw(shaderProgram); 
+            
+        }else if (mesh != nullptr) {
             nbOfDraw++;
             GLuint modelLoc = glGetUniformLocation(shaderProgram, "u_model");
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &transformation.modelMatrix[0][0]); 

@@ -1,13 +1,15 @@
 #ifndef AABB_HPP
 #define AABB_HPP
-
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <limits>
 #include <vector>
 
-#include "../Mesh.hpp"
+#include "../Controller.hpp"
 #include "../../../UI/ImGuiConsole.hpp"
+
+class Mesh;
 
 struct AABB {
     glm::vec3 min;
@@ -22,6 +24,11 @@ struct AABB {
     /// @param other AABB
     /// @return True if is contained, False otherwise
     bool contains(const AABB& other);
+
+    /// @brief Checks if the point is contained in the AABB
+    /// @param point The point to check
+    /// @return True if the point is contained, False otherwise
+    bool containsOrBelow(const glm::vec3& point);
 
     /// @brief Compute the overlap value of the other AABB.
     /// @param other AABB
